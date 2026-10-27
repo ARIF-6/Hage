@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+/* Dark mode: triggers when .dark or [data-theme="dark"] is on <html> or <body> */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+
+@theme {
+  --color-primary: #2563eb;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  --color-secondary: #f8fafc;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+@layer base {
+  :root {
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-subtle: #f1f5f9;
+    --border-subtle: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+  }
+
+  .dark {
+    --bg-main: #0B0E14;
+    --bg-card: #111722;
+    --bg-subtle: #182030;
+    --border-subtle: #1E293B;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.15);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+/* Glow effects & utilities */
+.glow-green {
+  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.3);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px -5px rgba(37, 99, 235, 0.3);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px -5px rgba(139, 92, 246, 0.3);
+}
+
+.glow-red {
+  box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.3);
+}
+
+/* ========================================================
+   Admin Console Light Mode Styles
+   Ensures all admin pages, tables, stat cards, and modals
+   look clean, readable, and elegant when Light Mode is chosen.
+   ======================================================== */
+html:not(.dark) .admin-root {
+  color: #0f172a;
+}
+
+html:not(.dark) .admin-root .bg-\[\#0D1120\],
+html:not(.dark) .admin-root .bg-\[\#0D1120\]\/95,
+html:not(.dark) .admin-root .bg-\[\#0D1120\]\/98 {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .admin-root .bg-\[\#080C16\] {
+  background-color: #f8fafc !important;
+}
+
+/* Borders */
+html:not(.dark) .admin-root .border-white\/6,
+html:not(.dark) .admin-root .border-white\/8,
+html:not(.dark) .admin-root .border-white\/10,
+html:not(.dark) .admin-root .border-white\/12 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Text overrides in admin cards */
+html:not(.dark) .admin-root h1:not([class*="bg-"]),
+html:not(.dark) .admin-root h2:not([class*="bg-"]),
+html:not(.dark) .admin-root h3:not([class*="bg-"]),
+html:not(.dark) .admin-root h4:not([class*="bg-"]),
+html:not(.dark) .admin-root .text-2xl.text-white,
+html:not(.dark) .admin-root .text-3xl.text-white,
+html:not(.dark) .admin-root .text-xl.text-white,
+html:not(.dark) .admin-root p.font-bold.text-white,
+html:not(.dark) .admin-root p.font-black.text-white,
+html:not(.dark) .admin-root p.font-extrabold.text-white,
+html:not(.dark) .admin-root span.font-bold.text-white,
+html:not(.dark) .admin-root span.font-black.text-white,
+html:not(.dark) .admin-root span.font-extrabold.text-white,
+html:not(.dark) .admin-root td p.font-bold.text-white,
+html:not(.dark) .admin-root td p.font-black.text-white {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .admin-root .text-slate-400 {
+  color: #64748b !important;
+}
+
+html:not(.dark) .admin-root .text-slate-500 {
+  color: #64748b !important;
+}
+
+html:not(.dark) .admin-root .text-slate-300 {
+  color: #334155 !important;
+}
+
+/* Table styling in light mode */
+html:not(.dark) .admin-root thead tr {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .admin-root thead th {
+  color: #64748b !important;
+}
+
+html:not(.dark) .admin-root tbody tr {
+  border-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .admin-root tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) .admin-root .divide-white\/4 > :not([hidden]) ~ :not([hidden]),
+html:not(.dark) .admin-root .divide-white\/6 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #f1f5f9 !important;
+}
+
+/* Subtle background surfaces and hovers */
+html:not(.dark) .admin-root .bg-white\/2,
+html:not(.dark) .admin-root .bg-white\/3,
+html:not(.dark) .admin-root .bg-white\/4,
+html:not(.dark) .admin-root .bg-white\/5,
+html:not(.dark) .admin-root .bg-white\/6 {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .admin-root .hover\:bg-white\/2:hover,
+html:not(.dark) .admin-root .hover\:bg-white\/4:hover,
+html:not(.dark) .admin-root .hover\:bg-white\/5:hover,
+html:not(.dark) .admin-root .hover\:bg-white\/6:hover,
+html:not(.dark) .admin-root .hover\:bg-white\/8:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* Form inputs & dropdowns */
+html:not(.dark) .admin-root input:not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) .admin-root select,
+html:not(.dark) .admin-root textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .admin-root input::placeholder,
+html:not(.dark) .admin-root textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Preserving white text for action buttons and color badges */
+html:not(.dark) .admin-root button.text-white,
+html:not(.dark) .admin-root [class*="bg-indigo-600"],
+html:not(.dark) .admin-root [class*="bg-emerald-600"],
+html:not(.dark) .admin-root [class*="bg-rose-600"],
+html:not(.dark) .admin-root [class*="bg-purple-600"],
+html:not(.dark) .admin-root [class*="bg-blue-600"],
+html:not(.dark) .admin-root [class*="bg-gradient-"] {
+  color: #ffffff;
+}
+

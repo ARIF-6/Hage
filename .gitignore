@@ -1,0 +1,57 @@
+# ── Dependencies ──────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Environment variables (NEVER commit secrets) ─────────────
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+!.env.example
+
+# ── Build outputs ──────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+
+# ── Logs ───────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Sensitive runtime & database files ─────────────────────────
+pids/
+*.pid
+*.seed
+*.pid.lock
+**/backend/data/hage_database.json
+**/backend/data/latest_otp.json
+**/backend/data/pending_registrations.json
+
+# ── TypeScript compiled output ─────────────────────────────────
+*.js.map
+*.tsbuildinfo
+
+# ── OS & Editor files ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Coverage & Cache ───────────────────────────────────────────
+coverage/
+.nyc_output/
+.cache/
+*.local

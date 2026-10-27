@@ -1,0 +1,25 @@
+{
+  "subscriptionPricing": {
+    "Starter": {
+      "monthly": 2.99,
+      "annual": 29.99,
+      "currency": "USD"
+    },
+    "Pro": {
+      "monthly": 4.99,
+      "annual": 49.99,
+      "threeMonths": 12.99,
+      "sixMonths": 24.99,
+      "currency": "USD"
+    },
+    "Premium": {
+      "monthly": 9.99,
+      "annual": 99.99,
+      "threeMonths": 26.99,
+      "sixMonths": 49.99,
+      "currency": "USD"
+    }
+  },
+  "updatedAt": "2026-10-23T14:58:44.212Z",
+  "updatedBy": "admin"
+}
