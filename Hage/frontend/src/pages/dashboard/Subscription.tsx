@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   CreditCard, CheckCircle2, Clock, Zap,
   Star, Shield, TrendingUp, BarChart2,
-  Calendar, ArrowRight, Sparkles, ArrowUp, Lock, RefreshCw, AlertTriangle
+  Calendar, ArrowRight, Sparkles, ArrowUp, Lock, RefreshCw, AlertTriangle, Check
 } from 'lucide-react';
 import {
   setUserPlan,
@@ -19,54 +19,66 @@ import { refreshSubscriptionFromBackend } from '../../services/paymentService';
 
 const DEFAULT_PRICING = { oneMonth: 2.99, threeMonths: 4.99, sixMonths: 9.99 };
 
-const FEATURES = [
-  { icon: BarChart2,  text: 'Full Advanced Analytics Dashboard' },
-  { icon: TrendingUp, text: 'Unlimited Trade Journal Entries' },
-  { icon: Shield,     text: 'Multi-Account Challenge Tracking' },
-  { icon: Zap,        text: 'Real-Time P&L & Drawdown Alerts' },
-  { icon: Star,       text: 'Payout Management & Certificates' },
-  { icon: Calendar,   text: 'Trade Calendar & Performance Reports' },
-];
-
 const PLANS = [
   {
     key: 'oneMonth' as const,
     label: 'Starter (1 Month)',
     planName: 'Starter',
+    duration: '1 Month',
     hint: 'Entry level',
     badge: null,
     accountsLimit: '2 Accounts',
     gradient: 'from-sky-500/10 to-cyan-500/5',
     border: 'border-sky-500/30',
-    activeBorder: 'border-sky-500',
+    activeBorder: 'border-blue-500',
     badgeBg: '',
     months: 1,
+    features: [
+      '2 Trading Accounts',
+      'Unlimited Trades',
+      'Advanced Analytics',
+      'Challenge Tracking & Phases',
+    ],
   },
   {
     key: 'threeMonths' as const,
     label: 'Pro (3 Months)',
     planName: 'Pro',
+    duration: '3 Months',
     hint: 'Most Popular',
     badge: '🔥 Popular',
     accountsLimit: '10 Accounts',
     gradient: 'from-indigo-500/15 to-violet-500/10',
     border: 'border-indigo-500/40',
-    activeBorder: 'border-indigo-500',
+    activeBorder: 'border-blue-500',
     badgeBg: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
     months: 3,
+    features: [
+      '10 Trading Accounts',
+      'Unlimited Trades',
+      'Advanced Analytics',
+      'Challenge Tracking & Phases',
+    ],
   },
   {
     key: 'sixMonths' as const,
     label: 'Premium (6 Months)',
     planName: 'Premium',
+    duration: '6 Months',
     hint: 'Best Value',
     badge: '⭐ Best Deal',
     accountsLimit: 'Unlimited Accounts',
     gradient: 'from-violet-500/15 to-purple-500/10',
     border: 'border-violet-500/40',
-    activeBorder: 'border-violet-500',
+    activeBorder: 'border-blue-500',
     badgeBg: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
     months: 6,
+    features: [
+      'Unlimited Trading Accounts',
+      'Unlimited Trades',
+      'Advanced Analytics',
+      'Challenge Tracking & Phases',
+    ],
   },
 ];
 
@@ -364,78 +376,93 @@ export default function Subscription() {
           {/* Plan Selection */}
           <div className="lg:col-span-2 space-y-4">
             <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Choose Your Duration</p>
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-3 gap-4">
               {PLANS.map((plan, i) => {
                 const price = pricing[plan.key];
                 const ppm = (price / plan.months).toFixed(2);
                 const isSelected = selectedPlan === plan.key;
                 return (
-                  <motion.button
+                  <motion.div
                     key={plan.key}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08 }}
                     onClick={() => setSelectedPlan(plan.key)}
-                    className={`relative p-4 rounded-2xl border-2 text-left transition-all bg-gradient-to-br ${plan.gradient} ${
+                    className={`relative flex flex-col p-6 rounded-2xl border-2 transition-all cursor-pointer ${
                       isSelected
-                        ? `${plan.activeBorder} shadow-lg`
-                        : `${plan.border} hover:border-opacity-70`
+                        ? 'border-blue-500 dark:border-blue-500 bg-white dark:bg-[#0d131f] shadow-xl shadow-blue-500/10 ring-2 ring-blue-500/20'
+                        : 'border-gray-200 dark:border-slate-800 bg-white dark:bg-[#0d131f]/70 hover:border-blue-500/40 dark:hover:border-slate-700'
                     }`}
                   >
                     {plan.badge && (
-                      <span className={`absolute -top-2 left-3 text-[10px] font-black px-2 py-0.5 rounded-full border ${plan.badgeBg}`}>
+                      <span className={`absolute -top-3 left-4 text-[11px] font-black px-2.5 py-0.5 rounded-full border shadow-sm ${plan.badgeBg}`}>
                         {plan.badge}
                       </span>
                     )}
 
-                    <div className="mt-1">
-                      <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">{plan.hint}</p>
-                      <p className="text-lg font-black text-gray-900 dark:text-white">{plan.label}</p>
-
-                      <div className="mt-3">
-                        <span className="text-2xl font-black text-gray-900 dark:text-white">${price.toFixed(2)}</span>
-                        <span className="text-xs text-gray-500 dark:text-slate-500 ml-1">total</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px] mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-800">
-                        <span className="text-gray-500 dark:text-slate-500">≈ ${ppm}/mo</span>
-                        <span className="font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">
-                          {plan.accountsLimit}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                        {plan.planName}
+                      </h3>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                          <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+                        </div>
+                      )}
                     </div>
 
-                    {isSelected && (
-                      <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                      </div>
+                    <div className="flex items-baseline gap-1 my-3">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">
+                        ${price.toFixed(2)}
+                      </span>
+                      <span className="text-gray-500 dark:text-slate-400 text-sm">
+                        {plan.months === 1 ? '/mo' : `total`}
+                      </span>
+                    </div>
+
+                    {plan.months > 1 && (
+                      <p className="text-xs text-blue-500 dark:text-blue-400 font-semibold -mt-2 mb-4">
+                        ≈ ${ppm}/mo ({plan.duration})
+                      </p>
                     )}
-                  </motion.button>
+
+                    <ul className="space-y-3.5 my-5 flex-grow">
+                      {plan.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm text-gray-600 dark:text-slate-300 font-medium">
+                          <CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="mt-auto pt-3 border-t border-gray-100 dark:border-slate-800/80">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPlan(plan.key);
+                        }}
+                        className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+                          isSelected
+                            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 border-2 border-blue-600'
+                            : 'border-2 border-blue-500 text-blue-500 dark:text-blue-400 hover:bg-blue-500/10 bg-transparent'
+                        }`}
+                      >
+                        {isSelected ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            {plan.planName} Selected
+                          </>
+                        ) : (
+                          `Get ${plan.planName}`
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
                 );
               })}
             </div>
 
-            {/* Challenge Account Progression Note */}
-            <div className="rounded-xl bg-indigo-500/10 border border-indigo-500/20 p-3.5 flex items-start gap-2.5 text-xs text-indigo-300">
-              <span className="text-base shrink-0">💡</span>
-              <p className="leading-relaxed">
-                <strong className="text-white">Challenge Accounts:</strong> If you pass Phase 1 and advance/connect Phase 2, both phases count as <strong className="text-emerald-400">1 single account</strong> towards your plan limit.
-              </p>
-            </div>
-
-            {/* Features list */}
-            <div className="rounded-2xl bg-gray-50 dark:bg-[#111722] border border-gray-200 dark:border-[#1E293B] p-5">
-              <p className="text-xs font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-4">Everything Included</p>
-              <div className="grid sm:grid-cols-2 gap-2.5">
-                {FEATURES.map(({ icon: Icon, text }) => (
-                  <div key={text} className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                      <Icon className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                    </div>
-                    <span className="text-xs text-gray-700 dark:text-slate-300 font-medium">{text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Order Summary */}

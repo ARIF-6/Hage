@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/Card';
 import { GoogleLogin } from '@react-oauth/google';
-import { ShieldCheck, ArrowLeft, RefreshCw, Check, Zap, Star, Shield, TrendingUp, BarChart2, Calendar, Sparkles } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, RefreshCw, Check, CheckCircle2, Zap, Star, Shield, TrendingUp, BarChart2, Calendar, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import { setUserPlan } from '../store/subscriptionRules';
 import { loadPlanPricing, fetchRemotePricing } from '../store/pricingStore';
@@ -31,9 +31,15 @@ const PLANS = [
     hint: 'ENTRY LEVEL', badge: null, months: 1,
     accountsLimit: '2 Accounts',
     borderClass: 'border-sky-500/40',
-    activeBorderClass: 'border-sky-500 ring-2 ring-sky-500/30',
+    activeBorderClass: 'border-blue-500 ring-2 ring-blue-500/30',
     gradientClass: 'from-sky-500/10 to-cyan-500/5',
     badgeClass: '',
+    features: [
+      '2 Trading Accounts',
+      'Unlimited Trades',
+      'Advanced Analytics',
+      'Challenge Tracking & Phases',
+    ],
   },
   {
     key: 'threeMonths' as const,
@@ -41,9 +47,15 @@ const PLANS = [
     hint: 'MOST POPULAR', badge: '🔥 Popular', months: 3,
     accountsLimit: '10 Accounts',
     borderClass: 'border-indigo-500/40',
-    activeBorderClass: 'border-indigo-500 ring-2 ring-indigo-500/30',
+    activeBorderClass: 'border-blue-500 ring-2 ring-blue-500/30',
     gradientClass: 'from-indigo-500/15 to-violet-500/10',
     badgeClass: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30',
+    features: [
+      '10 Trading Accounts',
+      'Unlimited Trades',
+      'Advanced Analytics',
+      'Challenge Tracking & Phases',
+    ],
   },
   {
     key: 'sixMonths' as const,
@@ -51,9 +63,15 @@ const PLANS = [
     hint: 'BEST VALUE', badge: '⭐ Best Deal', months: 6,
     accountsLimit: 'Unlimited Accounts',
     borderClass: 'border-violet-500/40',
-    activeBorderClass: 'border-violet-500 ring-2 ring-violet-500/30',
+    activeBorderClass: 'border-blue-500 ring-2 ring-blue-500/30',
     gradientClass: 'from-violet-500/15 to-purple-500/10',
     badgeClass: 'bg-violet-500/20 text-violet-300 border border-violet-500/30',
+    features: [
+      'Unlimited Trading Accounts',
+      'Unlimited Trades',
+      'Advanced Analytics',
+      'Challenge Tracking & Phases',
+    ],
   },
 ];
 
@@ -381,65 +399,90 @@ export default function Register() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             {PLANS.map((plan) => {
               const price = pricing[plan.key];
               const ppm = (price / plan.months).toFixed(2);
               const isSelected = selectedPlan === plan.key;
               return (
-                <button
+                <div
                   key={plan.key}
                   onClick={() => setSelectedPlan(plan.key)}
-                  className={`relative text-left p-5 rounded-2xl border bg-gradient-to-br transition-all duration-200 cursor-pointer ${plan.gradientClass} ${
-                    isSelected ? plan.activeBorderClass + ' bg-slate-800/60' : plan.borderClass + ' bg-slate-900/40 hover:bg-slate-800/30'
+                  className={`relative flex flex-col p-7 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
+                    isSelected
+                      ? 'border-blue-500 bg-slate-900/90 shadow-2xl shadow-blue-500/10 ring-2 ring-blue-500/20'
+                      : 'border-slate-800 bg-slate-900/50 hover:border-blue-500/40 hover:bg-slate-900/70'
                   }`}
                 >
-                  {isSelected && (
-                    <div className="absolute top-3 left-3">
-                      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                    </div>
-                  )}
                   {plan.badge && (
-                    <span className={`absolute top-3 right-3 text-xs font-semibold px-2 py-0.5 rounded-full ${plan.badgeClass}`}>
+                    <span className={`absolute -top-3 left-6 text-xs font-bold px-3 py-0.5 rounded-full border shadow-sm ${plan.badgeClass}`}>
                       {plan.badge}
                     </span>
                   )}
-                  <div className="mb-3 mt-1">
-                    <p className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-1">{plan.hint}</p>
-                    <h3 className="text-lg font-bold text-white">{plan.label} <span className="text-slate-400 font-normal text-sm">({plan.duration})</span></h3>
+
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-xl font-bold text-white">
+                      {plan.planName}
+                    </h3>
+                    {isSelected && (
+                      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                        <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-end gap-1 mb-1">
-                    <span className="text-3xl font-extrabold text-white">${price.toFixed(2)}</span>
-                    <span className="text-slate-400 text-sm mb-1">total</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-slate-700/40">
-                    <span className="text-slate-400">≈ ${ppm}/mo</span>
-                    <span className="font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
-                      {plan.accountsLimit}
+
+                  <div className="flex items-baseline gap-1 my-3">
+                    <span className="text-4xl font-extrabold text-white tracking-tight">
+                      ${price.toFixed(2)}
+                    </span>
+                    <span className="text-slate-400 text-sm font-medium">
+                      {plan.months === 1 ? '/mo' : 'total'}
                     </span>
                   </div>
-                </button>
+
+                  {plan.months > 1 && (
+                    <p className="text-xs text-blue-400 font-semibold -mt-2 mb-4">
+                      ≈ ${ppm}/mo ({plan.duration})
+                    </p>
+                  )}
+
+                  <ul className="space-y-3.5 my-6 flex-grow">
+                    {plan.features.map((feat, idx) => (
+                      <li key={idx} className="flex items-center gap-3 text-sm text-slate-300 font-medium">
+                        <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-auto pt-3 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPlan(plan.key);
+                      }}
+                      className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 border-2 border-blue-600'
+                          : 'border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 bg-transparent'
+                      }`}
+                    >
+                      {isSelected ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          {plan.planName} Selected
+                        </>
+                      ) : (
+                        `Get ${plan.planName}`
+                      )}
+                    </button>
+                  </div>
+                </div>
               );
             })}
           </div>
 
-          <div className="mb-6 p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-center text-xs text-slate-400">
-            💡 <strong className="text-slate-300">Challenge Accounts:</strong> When you pass Phase 1 and advance to Phase 2, both phases belong to the same challenge and count as <strong className="text-emerald-400">1 single account</strong>.
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 mb-6">
-            <p className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-4">Everything Included</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {FEATURES.map((f) => (
-                <div key={f.text} className="flex items-center gap-2.5 text-slate-300 text-sm">
-                  <f.icon className="w-4 h-4 text-blue-400 shrink-0" />
-                  {f.text}
-                </div>
-              ))}
-            </div>
-          </div>
 
           <div className="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
