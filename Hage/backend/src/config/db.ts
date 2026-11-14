@@ -34,9 +34,9 @@ const connectDB = async () => {
  */
 const seedAdmin = async () => {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@hage.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-    const adminName = process.env.ADMIN_NAME || 'Admin';
+    const adminEmail = (process.env.ADMIN_EMAIL || 'omar@gmail.com').toLowerCase().trim();
+    const adminPassword = process.env.ADMIN_PASSWORD || 'omar123';
+    const adminName = process.env.ADMIN_NAME || 'Omar Dahir';
 
     const existing = await User.findOne({ email: adminEmail });
     if (existing) {

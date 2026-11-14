@@ -80,16 +80,81 @@ export class DbManager {
       if (fs.existsSync(DB_FILE)) {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         this.memoryStore = JSON.parse(raw);
+        if (!this.memoryStore.users) this.memoryStore.users = [];
         if (!this.memoryStore.aiConversations) this.memoryStore.aiConversations = [];
         if (!this.memoryStore.aiMessages) this.memoryStore.aiMessages = [];
         if (!this.memoryStore.aiKnowledgeDocs) this.memoryStore.aiKnowledgeDocs = [];
+        this.ensureInitialUsers();
         this.ensureInitialAccounts();
       } else {
+        this.ensureInitialUsers();
         this.ensureInitialAccounts();
       }
     } catch (err) {
       console.error('Error reading persistent database file:', err);
+      this.ensureInitialUsers();
       this.ensureInitialAccounts();
+    }
+  }
+
+  public ensureInitialUsers() {
+    if (!this.memoryStore.users) {
+      this.memoryStore.users = [];
+    }
+
+    const adminEmail = (process.env.ADMIN_EMAIL || 'omar@gmail.com').toLowerCase().trim();
+    const adminPassword = process.env.ADMIN_PASSWORD || 'omar123';
+    const passwordHash = bcrypt.hashSync(adminPassword, 10);
+
+    let admin = this.memoryStore.users.find(u => u.email?.toLowerCase() === adminEmail);
+    if (!admin) {
+      admin = {
+        _id: 'admin_omar_01',
+        name: 'Omar Dahir',
+        email: adminEmail,
+        passwordHash,
+        role: 'admin',
+        isVerified: true,
+        isSuspended: false,
+        subscriptionTier: 'Pro',
+        subscriptionPlan: 'Pro',
+        subscriptionStatus: 'Active',
+        paymentMethod: 'Crypto',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      this.memoryStore.users.push(admin);
+      this.saveToDisk();
+      console.log(`[DB] Seeded default admin user (${adminEmail}) into memory store.`);
+    } else {
+      admin.role = 'admin';
+      admin.isVerified = true;
+      admin.isSuspended = false;
+      if (!admin.subscriptionPlan) admin.subscriptionPlan = 'Pro';
+      if (!admin.subscriptionStatus) admin.subscriptionStatus = 'Active';
+    }
+
+    // Always ensure omar@gmail.com exists
+    if (adminEmail !== 'omar@gmail.com') {
+      const omar = this.memoryStore.users.find(u => u.email?.toLowerCase() === 'omar@gmail.com');
+      if (!omar) {
+        this.memoryStore.users.push({
+          _id: 'admin_omar_default',
+          name: 'Omar Dahir',
+          email: 'omar@gmail.com',
+          passwordHash: bcrypt.hashSync('omar123', 10),
+          role: 'admin',
+          isVerified: true,
+          isSuspended: false,
+          subscriptionTier: 'Pro',
+          subscriptionPlan: 'Pro',
+          subscriptionStatus: 'Active',
+          paymentMethod: 'Crypto',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        this.saveToDisk();
+      }
     }
   }
 

