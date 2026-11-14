@@ -9,7 +9,7 @@ import {
 import axios from 'axios';
 import { useTheme } from '../../context/ThemeContext';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE } from '../../config/api';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

@@ -1,5 +1,7 @@
 // Centralized API configuration for HAGE Trading Journal
 
+const CLOUDFLARE_BACKEND_URL = 'https://hage-backend.mohameddhuux6.workers.dev/api';
+
 export const getApiBaseUrl = (): string => {
   // 1. Explicit Vite environment variable (set in Cloudflare Pages / Vercel / .env)
   if (import.meta.env.VITE_API_URL) {
@@ -13,10 +15,9 @@ export const getApiBaseUrl = (): string => {
       return savedBackend.replace(/\/+$/, '');
     }
 
-    // 3. If deployed on cloud domain (e.g. workers.dev, vercel.app, etc.) and no env var provided,
-    // default to relative `/api` on same origin so Cloudflare routing/proxies work
+    // 3. If deployed on cloud domain, point to the Cloudflare Worker backend
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return `${window.location.origin}/api`;
+      return CLOUDFLARE_BACKEND_URL;
     }
   }
 

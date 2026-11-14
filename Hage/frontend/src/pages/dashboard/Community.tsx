@@ -52,7 +52,9 @@ const AVATAR_COLORS = [
   'from-rose-500 to-pink-600', 'from-cyan-500 to-sky-600',
 ];
 
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/community';
+import { COMMUNITY_API } from '../../config/api';
+
+const API = COMMUNITY_API;
 const POLL_MS = 3000;
 
 /* ------------------------------------------------------------------ */

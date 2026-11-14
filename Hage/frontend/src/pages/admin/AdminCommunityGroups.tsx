@@ -5,7 +5,9 @@ import {
   Clock, MessageSquare, RefreshCw, Lock, Globe, Loader2, AlertTriangle
 } from 'lucide-react';
 
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/community';
+import { COMMUNITY_API } from '../../config/api';
+
+const API = COMMUNITY_API;
 
 interface Group {
   id: string; name: string; description: string;
