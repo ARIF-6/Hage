@@ -19,18 +19,42 @@ const app = express();
 const PORT = config.port;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://hage.mohameddhuux6.workers.dev',
+  'https://hage.pages.dev',
+  // Allow any *.workers.dev or *.pages.dev subdomain
+  /\.workers\.dev$/,
+  /\.pages\.dev$/,
+];
+
+app.use(cors({
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    const isAllowed = allowedOrigins.some(o =>
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    if (isAllowed) return callback(null, true);
+    return callback(null, true); // Allow all for now - tighten in production if needed
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // Root & Health Check
+const FRONTEND = process.env.FRONTEND_URL || 'http://localhost:5173';
 app.get('/', (req, res) => {
   if (req.accepts('html')) {
-    return res.redirect('http://localhost:5173');
+    return res.redirect(FRONTEND);
   }
   res.status(200).json({
     status: 'ok',
     message: 'HAGE API Server is running successfully',
-    frontend: 'http://localhost:5173',
+    frontend: FRONTEND,
     health: '/api/health'
   });
 });
