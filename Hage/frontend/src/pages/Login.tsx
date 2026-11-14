@@ -4,6 +4,7 @@ import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/Card';
 import { GoogleAuthButton } from '../components/ui/GoogleAuthButton';
 import axios from 'axios';
+import { AUTH_API } from '../config/api';
 import { useState, useEffect } from 'react';
 import { hasUserPurchasedPlan } from '../store/subscriptionRules';
 import { switchActiveUser } from '../store/useTradeStore';
@@ -30,7 +31,7 @@ export default function Login() {
 
     try {
       // 1. Try real backend API
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
+      const res = await axios.post(`${AUTH_API}/login`, {
         email,
         password
       });

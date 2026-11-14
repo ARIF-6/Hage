@@ -10,8 +10,7 @@
  *   2. Admin > Settings
  */
 import axios from 'axios';
-
-const API_BASE = 'http://localhost:5000/api';
+import { API_BASE } from '../config/api';
 
 export interface PlanPricing {
   monthly: number;

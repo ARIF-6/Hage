@@ -10,6 +10,7 @@ import { useTradeStore, type JournalEntry } from '../../store/useTradeStore';
 import { triggerReadOnlyAlert } from '../../store/subscriptionRules';
 import { format } from 'date-fns';
 import axios from 'axios';
+import { JOURNAL_API } from '../../config/api';
 
 const MOODS: ('Disciplined' | 'Neutral' | 'Excited' | 'Frustrated' | 'Patient')[] = [
   'Disciplined',
@@ -63,7 +64,7 @@ export default function Journal() {
 
     const fetchDatabaseEntries = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/journal', {
+        const res = await axios.get(JOURNAL_API, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (Array.isArray(res.data) && res.data.length > 0) {
@@ -166,7 +167,7 @@ export default function Journal() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          await axios.put(`http://localhost:5000/api/journal/${editingId}`, {
+          await axios.put(`${JOURNAL_API}/${editingId}`, {
             title: entryTitle,
             date,
             content: content.trim(),
@@ -195,7 +196,7 @@ export default function Journal() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          await axios.post('http://localhost:5000/api/journal', {
+          await axios.post(JOURNAL_API, {
             title: entryTitle,
             date,
             content: content.trim(),
@@ -228,7 +229,7 @@ export default function Journal() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        await axios.delete(`http://localhost:5000/api/journal/${id}`, {
+        await axios.delete(`${JOURNAL_API}/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } catch {

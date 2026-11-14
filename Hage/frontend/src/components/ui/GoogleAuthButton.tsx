@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
+import { AUTH_API } from '../../config/api';
 
 interface GoogleAuthButtonProps {
   text?: string;
@@ -36,7 +37,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
         }
 
         // 2. Post to backend auth endpoint
-        const res = await axios.post('http://localhost:5000/api/auth/google', {
+        const res = await axios.post(`${AUTH_API}/google`, {
           accessToken: tokenResponse.access_token,
           userInfo: userInfo ? {
             email: userInfo.email,

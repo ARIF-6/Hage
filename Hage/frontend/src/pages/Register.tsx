@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../compone
 import { GoogleAuthButton } from '../components/ui/GoogleAuthButton';
 import { ShieldCheck, ArrowLeft, RefreshCw, Check, CheckCircle2, Zap, Star, Shield, TrendingUp, BarChart2, Calendar, Sparkles } from 'lucide-react';
 import axios from 'axios';
+import { AUTH_API } from '../config/api';
 import { setUserPlan } from '../store/subscriptionRules';
 import { loadPlanPricing, fetchRemotePricing } from '../store/pricingStore';
 import { CryptoPaymentModal } from '../components/ui/CryptoPaymentModal';
@@ -167,7 +168,7 @@ export default function Register() {
 
     try {
       // 1. Try real backend API
-      const res = await axios.post('http://localhost:5000/api/auth/register', {
+      const res = await axios.post(`${AUTH_API}/register`, {
         name,
         email: email.trim().toLowerCase(),
         password
@@ -211,7 +212,7 @@ export default function Register() {
       }
 
       // 2. Offline fallback ONLY if backend server is unreachable
-      setError('Unable to reach the authentication server. Please ensure the backend server is running on port 5000.');
+      setError('Unable to reach the authentication server. Please check your internet connection or verify the backend service URL.');
     } finally {
       setSubmitting(false);
     }
@@ -228,7 +229,7 @@ export default function Register() {
     setSubmitting(true);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/verify-registration', {
+      const res = await axios.post(`${AUTH_API}/verify-registration`, {
         email: email.trim().toLowerCase(),
         otp: otp.trim()
       });
@@ -276,7 +277,7 @@ export default function Register() {
     setSuccessMsg('');
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/resend-registration-otp', {
+      const res = await axios.post(`${AUTH_API}/resend-registration-otp`, {
         email: email.trim().toLowerCase()
       });
       setSuccessMsg(res.data?.message || 'A new verification code has been sent to your email.');

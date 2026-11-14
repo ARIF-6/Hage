@@ -5,6 +5,7 @@ import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/Card';
 import { ArrowLeft, KeyRound, Mail, ShieldCheck, CheckCircle2, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import axios from 'axios';
+import { AUTH_API } from '../config/api';
 
 export default function ResetPassword() {
   const location = useLocation();
@@ -57,7 +58,7 @@ export default function ResetPassword() {
     setSuccessMsg('');
 
     try {
-      await axios.post('http://localhost:5000/api/auth/forgot-password', {
+      await axios.post(`${AUTH_API}/forgot-password`, {
         email: cleanEmail
       });
 
@@ -84,7 +85,7 @@ export default function ResetPassword() {
     setError('');
 
     try {
-      await axios.post('http://localhost:5000/api/auth/verify-reset-otp', {
+      await axios.post(`${AUTH_API}/verify-reset-otp`, {
         email: email.trim().toLowerCase(),
         otp: cleanOtp
       });
@@ -106,7 +107,7 @@ export default function ResetPassword() {
     setSuccessMsg('');
 
     try {
-      await axios.post('http://localhost:5000/api/auth/forgot-password', {
+      await axios.post(`${AUTH_API}/forgot-password`, {
         email: email.trim().toLowerCase()
       });
       setSuccessMsg('A new verification code has been sent to your email.');
@@ -138,7 +139,7 @@ export default function ResetPassword() {
     setError('');
 
     try {
-      await axios.post('http://localhost:5000/api/auth/reset-password', {
+      await axios.post(`${AUTH_API}/reset-password`, {
         email: email.trim().toLowerCase(),
         otp: otp.trim(),
         newPassword: password

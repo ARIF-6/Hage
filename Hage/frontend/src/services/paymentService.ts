@@ -5,9 +5,7 @@
  * API keys are NEVER used in frontend code.
  */
 import axios from 'axios';
-
-const API_BASE  = 'http://localhost:5000/api/payments';
-const AUTH_BASE = 'http://localhost:5000/api/auth';
+import { PAYMENTS_API as API_BASE, AUTH_API as AUTH_BASE } from '../config/api';
 
 export interface CreatePaymentResponse {
   paymentId: string;
