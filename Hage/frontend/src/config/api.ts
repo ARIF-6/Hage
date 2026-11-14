@@ -1,19 +1,28 @@
+// Centralized API configuration for HAGE Trading Journal
+
+const RENDER_BACKEND_URL = 'https://hage-1.onrender.com/api';
+
 export const getApiBaseUrl = (): string => {
-  // 1. Explicit Vite environment variable (set in Cloudflare / .env)
+  // 1. Explicit Vite environment variable (set in Vercel / Render / .env)
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
 
-  // 2. Custom backend override saved in localStorage (allows instant tunnel / cloud connection)
+  // 2. Custom backend override saved in localStorage (allows instant testing)
   if (typeof window !== 'undefined') {
     const savedBackend = localStorage.getItem('hage_custom_api_url');
     if (savedBackend) {
       return savedBackend.replace(/\/+$/, '');
     }
 
-    // 3. If deployed on cloud domain, default to relative /api on same origin
+    // 3. When deployed on cloud (Vercel, Cloudflare, etc.)
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return `${window.location.origin}/api`;
+      // If hosted directly on the Render backend, use same-origin relative /api
+      if (window.location.hostname.includes('onrender.com')) {
+        return `${window.location.origin}/api`;
+      }
+      // When hosted on Vercel (or any other domain), connect to the Render production backend
+      return RENDER_BACKEND_URL;
     }
   }
 

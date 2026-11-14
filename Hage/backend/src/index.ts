@@ -24,9 +24,11 @@ const PORT = config.port;
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://hage-h960wpih0-caarif.vercel.app',
   'https://hage.mohameddhuux6.workers.dev',
   'https://hage.pages.dev',
-  // Allow any *.workers.dev or *.pages.dev subdomain
+  // Allow any *.vercel.app, *.workers.dev, *.pages.dev, or *.onrender.com subdomain
+  /\.vercel\.app$/,
   /\.workers\.dev$/,
   /\.pages\.dev$/,
   /\.onrender\.com$/,

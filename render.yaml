@@ -18,3 +18,7 @@ services:
         value: omar@gmail.com
       - key: ADMIN_PASSWORD
         value: omar123
+      - key: FRONTEND_URL
+        value: https://hage-h960wpih0-caarif.vercel.app
+      - key: BACKEND_URL
+        value: https://hage-1.onrender.com
