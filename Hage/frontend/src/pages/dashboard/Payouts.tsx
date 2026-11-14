@@ -87,8 +87,6 @@ export default function Payouts() {
   // Form balance calculations
   const numAmount = parseFloat(amount) || 0;
   const currentBalance = selectedCampaign?.currentBalance || 0;
-  const balanceAfterIfApproved = Math.max(0, currentBalance - numAmount);
-  const remainingProfit = Math.max(0, netProfit - numAmount);
 
   // Filtered list for display
   const displayedPayouts = allPayouts.filter(p => {
@@ -718,85 +716,6 @@ export default function Payouts() {
                         <option value="Pending">Pending (Review)</option>
                         <option value="Approved">Approved (Instant)</option>
                       </select>
-                    </div>
-                  </div>
-
-                  {/* Payout Breakdown Summary */}
-                  <div className="rounded-xl border border-gray-200/80 dark:border-slate-700/60 overflow-hidden text-[11px]">
-                    {/* Header */}
-                    <div className="bg-gray-100 dark:bg-[#161f2e] px-3 py-1.5 flex items-center gap-1.5">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 dark:text-slate-400">Payout Breakdown</span>
-                    </div>
-
-                    {/* Rows */}
-                    <div className="divide-y divide-gray-100 dark:divide-slate-800">
-                      {/* Row 1: Starting Capital */}
-                      <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-[#111722]">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
-                          <span className="text-gray-500 dark:text-slate-400">Starting Capital</span>
-                        </div>
-                        <span className="font-semibold text-gray-700 dark:text-slate-300 tabular-nums">
-                          ${startingBal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-
-                      {/* Row 2: Current Balance */}
-                      <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-[#111722]">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></span>
-                          <span className="text-gray-500 dark:text-slate-400">Current Balance</span>
-                        </div>
-                        <span className="font-bold text-gray-900 dark:text-white tabular-nums">
-                          ${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-
-                      {/* Row 3: Net Profit */}
-                      <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-[#111722]">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${netProfit > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
-                          <span className="text-gray-500 dark:text-slate-400">Net Profit</span>
-                        </div>
-                        <span className={`font-bold tabular-nums ${netProfit > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
-                          {netProfit >= 0 ? '+' : ''}${netProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-
-                      {/* Divider with label */}
-                      <div className="flex items-center gap-2 px-3 py-1 bg-rose-50 dark:bg-rose-950/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
-                        <span className="flex-1 text-rose-600 dark:text-rose-400 font-semibold">You are requesting to withdraw</span>
-                        <span className="font-bold text-rose-600 dark:text-rose-400 tabular-nums">
-                          −${numAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-
-                      {/* Row 4: Remaining Profit After */}
-                      <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-[#111722]">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${remainingProfit > 0 ? 'bg-emerald-400' : 'bg-slate-400'}`}></span>
-                          <span className="text-gray-500 dark:text-slate-400">Remaining Profit</span>
-                        </div>
-                        <span className={`font-semibold tabular-nums ${remainingProfit > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`}>
-                          ${remainingProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Final Result */}
-                    <div className="flex items-center justify-between px-3 py-2 bg-emerald-50 dark:bg-emerald-950/40 border-t-2 border-emerald-200 dark:border-emerald-800/60">
-                      <div>
-                        <p className="font-black text-[11px] text-emerald-800 dark:text-emerald-300">
-                          {status === 'Approved' ? '✓ New Account Balance' : '📋 Balance If Approved'}
-                        </p>
-                        <p className="text-[9px] text-emerald-600/70 dark:text-emerald-500/70 mt-0.5">
-                          {status === 'Pending' ? 'Balance only changes upon approval' : 'Balance deducted immediately'}
-                        </p>
-                      </div>
-                      <span className="text-base font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
-                        ${balanceAfterIfApproved.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </span>
                     </div>
                   </div>
 

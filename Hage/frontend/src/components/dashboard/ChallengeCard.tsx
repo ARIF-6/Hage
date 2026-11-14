@@ -121,11 +121,11 @@ export function ChallengeCard({ campaignId, onConnectNew }: ChallengeCardProps) 
                 <span className="text-xs text-gray-400 dark:text-slate-400">•</span>
                 <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">{campaign.broker}</span>
               </div>
-              <CardTitle className="text-sm sm:text-base font-bold text-gray-900 dark:text-white max-w-[calc(100%-210px)] truncate">
+              <CardTitle className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
                 {campaign.name}
               </CardTitle>
             </div>
-            <div className="hidden">
+            <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#182030] border border-gray-200/50 dark:border-slate-800 flex items-center justify-center">
               {campaign.status === 'Passed' ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               ) : campaign.status === 'Failed' || isFailed ? (

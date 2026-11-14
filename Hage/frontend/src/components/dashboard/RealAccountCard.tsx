@@ -89,11 +89,11 @@ export function RealAccountCard({ campaign }: RealAccountCardProps) {
                   {campaign.broker}
                 </span>
               </div>
-              <CardTitle className="text-sm sm:text-base font-bold text-gray-900 dark:text-white max-w-[calc(100%-210px)] truncate">
+              <CardTitle className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
                 {campaign.name}
               </CardTitle>
             </div>
-            <div className="hidden">
+            <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#182030] border border-gray-200/50 dark:border-slate-800 flex items-center justify-center">
               <Wallet className="w-4 h-4 text-purple-500" />
             </div>
           </div>
