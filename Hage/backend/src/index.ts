@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
 import connectDB from './config/db';
 import authRoutes from './routes/authRoutes';
 import accountRoutes from './routes/accountRoutes';
@@ -27,6 +29,7 @@ const allowedOrigins = [
   // Allow any *.workers.dev or *.pages.dev subdomain
   /\.workers\.dev$/,
   /\.pages\.dev$/,
+  /\.onrender\.com$/,
 ];
 
 app.use(cors({
@@ -45,20 +48,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
-// Root & Health Check
-const FRONTEND = process.env.FRONTEND_URL || 'http://localhost:5173';
-app.get('/', (req, res) => {
-  if (req.accepts('html')) {
-    return res.redirect(FRONTEND);
-  }
-  res.status(200).json({
-    status: 'ok',
-    message: 'HAGE API Server is running successfully',
-    frontend: FRONTEND,
-    health: '/api/health'
-  });
-});
-
+// Health Check
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'HAGE API is running', mongo: dbManager.getIsMongoConnected() });
 });
@@ -68,7 +58,7 @@ app.get('/api/pricing', getPricing);
 app.put('/api/pricing', updatePricing);
 app.post('/api/pricing', updatePricing);
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/trades', tradeRoutes);
@@ -78,6 +68,40 @@ app.use('/api/support', supportRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/ai-support', aiSupportRoutes);
 app.use('/api/community', communityRoutes);
+
+// Static frontend serving (Production Full-Stack Deployment)
+const distCandidates = [
+  path.resolve(__dirname, '../../../dist'),
+  path.resolve(__dirname, '../../dist'),
+  path.resolve(__dirname, '../../frontend/dist'),
+  path.resolve(process.cwd(), 'dist'),
+  path.resolve(process.cwd(), 'Hage/frontend/dist'),
+];
+const distPath = distCandidates.find(p => fs.existsSync(path.join(p, 'index.html')));
+
+if (distPath) {
+  console.log(`[SERVER] Serving static frontend from: ${distPath}`);
+  app.use(express.static(distPath));
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      return res.sendFile(path.join(distPath, 'index.html'));
+    }
+    next();
+  });
+} else {
+  const FRONTEND = process.env.FRONTEND_URL || 'http://localhost:5173';
+  app.get('/', (req, res) => {
+    if (req.accepts('html')) {
+      return res.redirect(FRONTEND);
+    }
+    res.status(200).json({
+      status: 'ok',
+      message: 'HAGE API Server is running successfully',
+      frontend: FRONTEND,
+      health: '/api/health'
+    });
+  });
+}
 
 // Global Error Handler & System Error Logger (Requirement 5)
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -56,4 +56,3 @@ coverage/
 .cache/
 *.local
 cloudflared.exe
-render.yaml
