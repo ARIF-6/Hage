@@ -38,13 +38,8 @@ export default function Payouts() {
     eligibleAccounts.length > 0 ? eligibleAccounts[0].id : ''
   );
   const [amount, setAmount] = useState<string>('2000');
-  const [payoutDate, setPayoutDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
-  const [status, setStatus] = useState<'Pending' | 'Approved'>('Pending');
   const [notes, setNotes] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [proofUrl, setProofUrl] = useState<string>('');
-  const [proofName, setProofName] = useState<string>('');
-  const [hasQrCode, setHasQrCode] = useState<boolean>(true);
   const [viewingProofPayout, setViewingProofPayout] = useState<Payout | null>(null);
 
   const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId) || eligibleAccounts[0];
@@ -118,10 +113,7 @@ export default function Payouts() {
       setAmount('0');
     }
 
-    setProofUrl('');
-    setProofName('');
     setError('');
-    setStatus('Pending');
     setIsRequestModalOpen(true);
   };
 
@@ -156,20 +148,14 @@ export default function Payouts() {
     addPayout({
       campaignId: selectedCampaign.id,
       amount: numAmount,
-      date: new Date(payoutDate).toISOString(),
-      status,
+      date: new Date().toISOString(),
+      status: 'Pending',
       notes,
-      proofUrl: proofUrl || undefined,
-      proofName: proofName || undefined,
-      proofDate: payoutDate,
-      hasQrCode
     });
 
     setIsRequestModalOpen(false);
     setAmount('0');
     setNotes('');
-    setProofUrl('');
-    setProofName('');
     setError('');
   };
 
@@ -691,33 +677,6 @@ export default function Payouts() {
                   </div>
 
                   {/* Payout Date & Status */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-700 dark:text-slate-300 mb-0.5">
-                        Request Date
-                      </label>
-                      <input
-                        type="date"
-                        value={payoutDate}
-                        onChange={(e) => setPayoutDate(e.target.value)}
-                        className="w-full px-2 py-1 text-xs font-medium rounded-lg bg-gray-50 dark:bg-[#182030] border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-700 dark:text-slate-300 mb-0.5">
-                        Initial Status
-                      </label>
-                      <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value as any)}
-                        className="w-full px-2 py-1 text-xs font-bold rounded-lg bg-gray-50 dark:bg-[#182030] border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                      >
-                        <option value="Pending">Pending (Review)</option>
-                        <option value="Approved">Approved (Instant)</option>
-                      </select>
-                    </div>
-                  </div>
 
                   {/* Notes */}
                   <div>
