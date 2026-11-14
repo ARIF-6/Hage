@@ -3,7 +3,7 @@
 const RENDER_BACKEND_URL = 'https://hage-1.onrender.com/api';
 
 export const getApiBaseUrl = (): string => {
-  // 1. Explicit Vite environment variable (set in Vercel / Render / .env)
+  // 1. Explicit Vite environment variable (set in Netlify / Render / .env)
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
@@ -15,13 +15,13 @@ export const getApiBaseUrl = (): string => {
       return savedBackend.replace(/\/+$/, '');
     }
 
-    // 3. When deployed on cloud (Vercel, Cloudflare, etc.)
+    // 3. When deployed on cloud (Netlify, Cloudflare, etc.)
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
       // If hosted directly on the Render backend, use same-origin relative /api
       if (window.location.hostname.includes('onrender.com')) {
         return `${window.location.origin}/api`;
       }
-      // When hosted on Vercel (or any other domain), connect to the Render production backend
+      // When hosted on Netlify (or any other domain), connect to the Render production backend
       return RENDER_BACKEND_URL;
     }
   }

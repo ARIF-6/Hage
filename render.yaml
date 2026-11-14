@@ -20,4 +20,4 @@ services:
       - key: ADMIN_PASSWORD
         value: omar123
       - key: FRONTEND_URL
-        value: https://hage-caarif.vercel.app
+        value: https://hagejournal.netlify.app
