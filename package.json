@@ -2,10 +2,14 @@
   "name": "hage-root",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "Hage/frontend",
+    "Hage/backend"
+  ],
   "scripts": {
     "dev": "npm --prefix Hage/frontend run dev",
     "dev:frontend": "npm --prefix Hage/frontend run dev",
     "dev:backend": "npm --prefix Hage/backend run dev",
-    "build": "npm --prefix Hage/frontend run build"
+    "build": "npm --prefix Hage/frontend install && npm --prefix Hage/frontend run build && node -e \"const fs = require('fs'); fs.cpSync('Hage/frontend/dist', 'dist', { recursive: true, force: true });\""
   }
 }
