@@ -102,14 +102,15 @@ export async function refreshSubscriptionFromBackend(token: string): Promise<boo
 
     const isPaidPlan     = plan === 'Starter' || plan === 'Pro' || plan === 'Premium';
     const isAdminGranted = paymentMethod === 'Manual Admin' || paymentMethod === 'Active Access';
+    const isFreeActive   = (plan === 'Free' || plan === 'Free Tier') && status === 'Active';
 
     localStorage.setItem('profile_plan', plan);
     localStorage.setItem('user_subscription_status', status);
     localStorage.setItem('profile_status', status);
     localStorage.setItem('profile_paymentMethod', paymentMethod);
 
-    if (status === 'Active' && (isPaidPlan || isAdminGranted)) {
-      const tier = isPaidPlan ? plan : 'Free';
+    if (status === 'Active' && (isPaidPlan || isAdminGranted || isFreeActive)) {
+      const tier = isPaidPlan ? plan : (plan === 'Free' || plan === 'Free Tier' ? 'Free' : 'Starter');
       localStorage.setItem('hage_user_subscription_tier', tier);
       localStorage.removeItem('hage_subscription_expired');
 
@@ -129,12 +130,12 @@ export async function refreshSubscriptionFromBackend(token: string): Promise<boo
       const statusPayload = {
         active:        true,
         status:        'Active',
-        plan:          planKey ? durationLabel[planKey] : (isPaidPlan ? durationLabel[planKey || 'oneMonth'] : plan),
-        duration:      planKey || (plan === 'Premium' ? 'sixMonths' : plan === 'Pro' ? 'threeMonths' : 'oneMonth'),
+        plan:          planKey ? durationLabel[planKey] : (isPaidPlan ? durationLabel[planKey || 'oneMonth'] : (plan === 'Free' ? 'Free Tier' : plan)),
+        duration:      planKey || (plan === 'Premium' ? 'sixMonths' : plan === 'Pro' ? 'threeMonths' : (plan === 'Free' ? 'free' : 'oneMonth')),
         price:         null,
-        expiry:        computedExpiry,
+        expiry:        plan === 'Free' ? null : computedExpiry,
         subscribedAt:  new Date().toISOString(),
-        paymentMethod: paymentMethod || 'Crypto (USDT BEP20)',
+        paymentMethod: paymentMethod || (isFreeActive ? 'Manual Admin' : 'Crypto (USDT BEP20)'),
       };
       localStorage.setItem('hage_subscription_status', JSON.stringify(statusPayload));
     } else {

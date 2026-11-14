@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/Card';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleAuthButton } from '../components/ui/GoogleAuthButton';
 import { ShieldCheck, ArrowLeft, RefreshCw, Check, CheckCircle2, Zap, Star, Shield, TrendingUp, BarChart2, Calendar, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import { setUserPlan } from '../store/subscriptionRules';
@@ -288,23 +288,14 @@ export default function Register() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleAuthSuccess = async (authData: any) => {
     try {
-      const { credential } = credentialResponse;
-      if (!credential) {
-        setError('No Google credentials received. Please try again.');
-        return;
-      }
-      const res = await axios.post('http://localhost:5000/api/auth/google', {
-        token: credential
-      });
-      
-      localStorage.setItem('token', res.data.token);
-      const userRole = res.data.role || 'user';
+      localStorage.setItem('token', authData.token);
+      const userRole = authData.role || 'user';
       localStorage.setItem('user_role', userRole);
       localStorage.setItem('profile_role', userRole);
-      localStorage.setItem('profile_email', res.data.email);
-      const fullName = (res.data.name || '').trim();
+      localStorage.setItem('profile_email', authData.email);
+      const fullName = (authData.name || '').trim();
       const nameParts = fullName.split(' ');
       localStorage.setItem('profile_firstName', nameParts[0] || 'User');
       localStorage.setItem('profile_lastName', nameParts.slice(1).join(' ') || '');
@@ -317,24 +308,19 @@ export default function Register() {
       localStorage.setItem('profile_plan', 'None');
       localStorage.setItem('profile_paymentMethod', 'None');
       localStorage.setItem('hage_user_subscription_tier', 'None');
-      switchActiveUser(res.data.email);
+      switchActiveUser(authData.email);
 
       if (userRole === 'admin') {
         navigate('/portal');
       } else {
-        setName(res.data.name || '');
-        setEmail(res.data.email || '');
+        setName(authData.name || '');
+        setEmail(authData.email || '');
         setStep('plans');
       }
     } catch (err: any) {
       console.error('Google register error:', err);
-      const serverMsg = err.response?.data?.message;
-      setError(serverMsg || 'Failed to sign up with Google. Please try again.');
+      setError('Failed to complete Google Sign-Up.');
     }
-  };
-
-  const handleGoogleError = () => {
-    setError('Google Sign-Up was unsuccessful.');
   };
 
   const handleActivatePlan = () => {
@@ -610,13 +596,11 @@ export default function Register() {
 
                 <div className="mt-6 flex justify-center">
                   <div className="w-full flex justify-center">
-                    <GoogleLogin 
-                      onSuccess={handleGoogleSuccess}
-                      onError={handleGoogleError}
-                      theme="outline"
-                      size="large"
-                      text="signup_with"
-                      width="350"
+                    <GoogleAuthButton 
+                      text="Sign up with Google"
+                      onSuccess={handleGoogleAuthSuccess}
+                      onError={(msg) => setError(msg)}
+                      disabled={submitting}
                     />
                   </div>
                 </div>

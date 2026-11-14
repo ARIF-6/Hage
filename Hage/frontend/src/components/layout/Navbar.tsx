@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Sun, Moon } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { cn } from '../../utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -28,33 +26,74 @@ export function Navbar() {
     { name: 'FAQ', path: '/#faq' },
   ];
 
+  const isDark = resolvedTheme !== 'light';
+
   return (
     <header
-      className={cn(
-        'fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent',
-        isScrolled ? 'bg-white/90 dark:bg-[#0B0E14]/90 backdrop-blur-md border-gray-200/80 dark:border-slate-800 shadow-sm py-3' : 'bg-transparent py-5'
-      )}
+      style={{
+        backgroundColor: isDark ? '#0E235C' : '#FFFFFF',
+        borderBottom: isScrolled
+          ? (isDark ? '1px solid rgba(235, 165, 70, 0.45)' : '1px solid rgba(14, 35, 92, 0.12)')
+          : (isDark ? '1px solid rgba(235, 165, 70, 0.25)' : '1px solid rgba(14, 35, 92, 0.08)'),
+        boxShadow: isScrolled 
+          ? (isDark ? '0 4px 20px -2px rgba(14, 35, 92, 0.6)' : '0 4px 20px -2px rgba(0, 0, 0, 0.06)') 
+          : 'none',
+        backdropFilter: 'blur(12px)',
+      }}
+      className="fixed top-0 w-full z-50 transition-all duration-300 py-3 sm:py-3.5"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <img src="/Hage.png" alt="Hage Logo" className="w-10 h-10 object-contain rounded-lg shadow-sm" />
-            <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">
+          {/* Brand Logo */}
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <img
+              src="/Hage.png"
+              alt="Hage Logo"
+              className="w-9 h-9 object-contain rounded-lg shadow-sm"
+              style={{ border: '1px solid rgba(235, 165, 70, 0.4)' }}
+            />
+            <span
+              style={{ color: isDark ? '#FFFFFF' : '#0E235C' }}
+              className="font-extrabold text-xl tracking-tight flex items-center gap-1.5 transition-colors"
+            >
               HAGE
+              <span
+                style={{
+                  backgroundColor: 'rgba(235, 165, 70, 0.18)',
+                  color: '#EBA546',
+                  borderColor: 'rgba(235, 165, 70, 0.45)',
+                }}
+                className="text-[10px] px-1.5 py-0.5 rounded font-black border uppercase tracking-wider"
+              >
+                PRO
+              </span>
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-7">
             {navLinks.map((link) => {
-              const className = "text-sm font-medium text-gray-600 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 transition-colors";
+              const linkProps = {
+                style: { 
+                  color: isDark ? '#FFFFFF' : '#0E235C', 
+                  transition: 'color 0.15s ease' 
+                },
+                className:
+                  'text-sm font-semibold hover:!text-[#EBA546] transition-colors cursor-pointer',
+                onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+                  e.currentTarget.style.color = '#EBA546';
+                },
+                onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+                  e.currentTarget.style.color = isDark ? '#FFFFFF' : '#0E235C';
+                },
+              };
+
               return link.path.startsWith('/#') ? (
-                <a key={link.name} href={link.path} className={className}>
+                <a key={link.name} href={link.path} {...linkProps}>
                   {link.name}
                 </a>
               ) : (
-                <Link key={link.name} to={link.path} className={className}>
+                <Link key={link.name} to={link.path} {...linkProps}>
                   {link.name}
                 </Link>
               );
@@ -66,24 +105,45 @@ export function Navbar() {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#182030] transition-colors"
-              title={`Switch to ${resolvedTheme === 'dark' ? 'Light' : 'Dark'} mode`}
+              style={{
+                backgroundColor: isDark ? 'rgba(235, 165, 70, 0.12)' : 'rgba(235, 165, 70, 0.15)',
+                borderColor: 'rgba(235, 165, 70, 0.35)',
+                color: '#EBA546',
+              }}
+              className="p-2 rounded-lg border hover:bg-[#EBA546]/20 transition-colors cursor-pointer"
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
             >
-              {resolvedTheme === 'dark' ? (
-                <Moon className="w-4 h-4 text-indigo-400" />
+              {isDark ? (
+                <Moon className="w-4 h-4" style={{ color: '#EBA546' }} />
               ) : (
-                <Sun className="w-4 h-4 text-amber-500" />
+                <Sun className="w-4 h-4" style={{ color: '#EBA546' }} />
               )}
             </button>
 
-            <Link 
-              to="/login" 
-              className="text-sm font-semibold text-gray-700 dark:text-slate-200 hover:text-primary dark:hover:text-blue-400 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#182030] transition-colors"
+            {/* Log in Button */}
+            <Link
+              to="/login"
+              style={{
+                color: isDark ? '#FFFFFF' : '#0E235C',
+                borderColor: isDark ? 'rgba(235, 165, 70, 0.35)' : 'rgba(14, 35, 92, 0.25)',
+                backgroundColor: isDark ? 'transparent' : '#FFFFFF',
+              }}
+              className="text-sm font-bold px-3.5 py-1.5 rounded-lg border hover:border-[#EBA546] hover:text-[#EBA546] transition-all cursor-pointer"
             >
               Log in
             </Link>
-            <Link to="/register">
-              <Button size="sm">Get Started</Button>
+
+            {/* Get Started Button */}
+            <Link
+              to="/register"
+              style={{
+                backgroundColor: '#EBA546',
+                color: '#0E235C',
+                borderColor: '#EBA546',
+              }}
+              className="text-sm font-black px-4 py-1.5 rounded-lg border shadow-sm hover:!bg-[#FFFFFF] hover:!text-[#0E235C] transition-all active:scale-95 cursor-pointer"
+            >
+              Get Started
             </Link>
           </div>
 
@@ -91,51 +151,94 @@ export function Navbar() {
           <div className="flex md:hidden items-center gap-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#182030] transition-colors"
+              style={{
+                backgroundColor: isDark ? 'rgba(235, 165, 70, 0.12)' : 'rgba(235, 165, 70, 0.15)',
+                borderColor: 'rgba(235, 165, 70, 0.35)',
+                color: '#EBA546',
+              }}
+              className="p-2 rounded-lg border transition-colors cursor-pointer"
               title="Toggle theme"
             >
-              {resolvedTheme === 'dark' ? (
-                <Moon className="w-4 h-4 text-indigo-400" />
+              {isDark ? (
+                <Moon className="w-4 h-4" style={{ color: '#EBA546' }} />
               ) : (
-                <Sun className="w-4 h-4 text-amber-500" />
+                <Sun className="w-4 h-4" style={{ color: '#EBA546' }} />
               )}
             </button>
+
             <button
-              className="p-2 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+              style={{
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(14, 35, 92, 0.06)',
+                color: isDark ? '#FFFFFF' : '#0E235C',
+              }}
+              className="p-2 rounded-lg hover:text-[#EBA546] focus:outline-none cursor-pointer"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" style={{ color: '#EBA546' }} />
+              ) : (
+                <Menu className="w-6 h-6" style={{ color: isDark ? '#FFFFFF' : '#0E235C' }} />
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Dropdown */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white dark:bg-[#111722] border-b border-gray-200 dark:border-slate-800 overflow-hidden shadow-lg"
+            style={{
+              backgroundColor: isDark ? '#0E235C' : '#FFFFFF',
+              borderBottom: isDark ? '1px solid rgba(235, 165, 70, 0.35)' : '1px solid rgba(14, 35, 92, 0.12)',
+            }}
+            className="md:hidden overflow-hidden shadow-2xl"
           >
-            <div className="px-4 py-6 space-y-4 flex flex-col">
+            <div className="px-4 py-5 space-y-3 flex flex-col">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-base font-medium text-gray-700 dark:text-slate-200 hover:text-primary dark:hover:text-blue-400"
+                  style={{ color: isDark ? '#FFFFFF' : '#0E235C' }}
+                  className="block text-base font-semibold hover:!text-[#EBA546] transition-colors py-1"
                 >
                   {link.name}
                 </Link>
               ))}
-              <hr className="my-2 border-gray-100 dark:border-slate-800" />
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-gray-700 dark:text-slate-200 hover:text-primary dark:hover:text-blue-400">
+
+              <hr
+                style={{ borderColor: isDark ? 'rgba(235, 165, 70, 0.25)' : 'rgba(14, 35, 92, 0.12)' }}
+                className="my-2"
+              />
+
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  color: isDark ? '#FFFFFF' : '#0E235C',
+                  borderColor: isDark ? 'rgba(235, 165, 70, 0.35)' : 'rgba(14, 35, 92, 0.25)',
+                  backgroundColor: 'transparent',
+                }}
+                className="block text-center text-base font-bold py-2 rounded-lg border hover:text-[#EBA546] hover:border-[#EBA546] transition-colors"
+              >
                 Log in
               </Link>
-              <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full">Get Started</Button>
+
+              <Link
+                to="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  backgroundColor: '#EBA546',
+                  color: '#0E235C',
+                }}
+                className="block text-center text-base font-black py-2 rounded-lg hover:!bg-[#FFFFFF] hover:!text-[#0E235C] transition-colors"
+              >
+                Get Started
               </Link>
             </div>
           </motion.div>

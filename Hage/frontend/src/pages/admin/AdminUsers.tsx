@@ -40,7 +40,9 @@ export default function AdminUsers() {
   const handleOpenPlanModal = (user: AdminUser) => {
     setEditingPlanUser(user);
     setTargetPlan((user.subscriptionPlan as any) || 'Free');
-    setTargetStatus((user.subscriptionStatus as any) || 'Active');
+    const currentStatus = user.subscriptionStatus || 'Active';
+    // If user was Pending Payment or Pending, default to Active so assigning a plan grants immediate access
+    setTargetStatus((currentStatus as string) === 'Pending Payment' || currentStatus === 'Pending' ? 'Active' : (currentStatus as any));
   };
 
   const handleSavePlan = async () => {
@@ -482,7 +484,12 @@ export default function AdminUsers() {
                         <button
                           key={plan.key}
                           type="button"
-                          onClick={() => setTargetPlan(plan.key as any)}
+                          onClick={() => {
+                            setTargetPlan(plan.key as any);
+                            if (targetStatus !== 'Expired') {
+                              setTargetStatus('Active');
+                            }
+                          }}
                           className={`p-3 rounded-xl border text-left transition-all relative cursor-pointer ${
                             isSelected
                               ? `${plan.color} ring-2 ring-indigo-500/30 font-bold shadow-sm`

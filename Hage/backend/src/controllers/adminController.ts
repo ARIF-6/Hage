@@ -658,6 +658,11 @@ export const updateSubscription = async (req: AuthRequest, res: Response): Promi
 
     const target = String(userId || '').trim();
     const user = store.users.find(u => u._id === target || u.email.toLowerCase() === target.toLowerCase());
+    
+    // Default to Active if status is 'Pending Payment' or omitted
+    const resolvedStatus = (!status || status === 'Pending Payment') ? 'Active' : status;
+    const resolvedPlan = plan || (user as any)?.subscriptionPlan || 'Free';
+
     let sub = store.subscriptions.find(s => 
       s.user === target || 
       (user && s.user === user._id) || 
@@ -671,8 +676,8 @@ export const updateSubscription = async (req: AuthRequest, res: Response): Promi
         user: user ? user._id : target,
         userName: user?.name || 'Trader',
         userEmail: user?.email || (target.includes('@') ? target : ''),
-        plan: plan || 'Free',
-        status: status || 'Active',
+        plan: resolvedPlan,
+        status: resolvedStatus,
         paymentMethod: 'Manual Admin',
         startDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
@@ -680,8 +685,8 @@ export const updateSubscription = async (req: AuthRequest, res: Response): Promi
       };
       store.subscriptions.push(sub);
     } else {
-      if (plan) sub.plan = plan;
-      if (status) sub.status = status;
+      sub.plan = resolvedPlan;
+      sub.status = resolvedStatus;
       sub.paymentMethod = 'Manual Admin';
       if (user && !sub.userEmail) sub.userEmail = user.email;
       if (user && !sub.userName) sub.userName = user.name;
@@ -689,16 +694,16 @@ export const updateSubscription = async (req: AuthRequest, res: Response): Promi
     }
 
     if (user) {
-      (user as any).subscriptionPlan = plan || sub.plan;
-      (user as any).subscriptionStatus = status || sub.status;
+      (user as any).subscriptionPlan = resolvedPlan;
+      (user as any).subscriptionStatus = resolvedStatus;
       (user as any).subscriptionPaymentMethod = 'Manual Admin';
     }
 
     if (dbManager.getIsMongoConnected()) {
       try {
         await User.findByIdAndUpdate(userId, {
-          subscriptionPlan: plan || sub.plan,
-          subscriptionStatus: status || sub.status
+          subscriptionPlan: resolvedPlan,
+          subscriptionStatus: resolvedStatus
         });
       } catch (_) {}
     }

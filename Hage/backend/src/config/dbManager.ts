@@ -26,6 +26,8 @@ export interface DatabaseStore {
   aiMessages: any[];
   aiKnowledgeDocs: any[];
   communityMessages: any[];
+  emailNotificationLogs?: any[];
+  payments?: any[];
 }
 
 const DATA_DIR = path.resolve(__dirname, '../../data');
@@ -117,7 +119,8 @@ export class DbManager {
       adminActivities: [],
       aiConversations: [],
       aiMessages: [],
-      aiKnowledgeDocs: []
+      aiKnowledgeDocs: [],
+      communityMessages: []
     };
     this.saveToDisk();
   }

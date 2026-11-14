@@ -536,33 +536,55 @@ export const getMe = async (req: any, res: Response): Promise<void> => {
 
 export const googleSignIn = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { token } = req.body;
+    const { token, accessToken, userInfo } = req.body;
     
-    if (!token) {
-      res.status(400).json({ message: 'Google token is missing' });
+    if (!token && !accessToken && !userInfo) {
+      res.status(400).json({ message: 'Google authentication credentials are required' });
       return;
     }
 
     let payload: any = null;
 
-    // Try standard Google ID token verification
-    try {
-      const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: config.googleClientId || undefined,
-      });
-      payload = ticket.getPayload();
-    } catch (verifyError: any) {
-      console.warn('[AUTH] Google verifyIdToken error (falling back to decoded JWT payload):', verifyError?.message || verifyError);
-      
-      // Fallback: decode Google ID token directly so clock skew or verification issues don't block users
+    if (userInfo && userInfo.email) {
+      payload = {
+        email: userInfo.email,
+        name: userInfo.name || userInfo.given_name || (userInfo.email ? userInfo.email.split('@')[0] : 'Trader'),
+        sub: userInfo.sub || userInfo.id,
+        picture: userInfo.picture,
+      };
+    } else if (accessToken) {
       try {
-        const decoded: any = jwt.decode(token);
-        if (decoded && (decoded.email || decoded.sub)) {
-          payload = decoded;
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (userInfoRes.ok) {
+          payload = await userInfoRes.json();
         }
-      } catch (decodeErr) {
-        console.error('[AUTH] Failed to decode Google token:', decodeErr);
+      } catch (err: any) {
+        console.warn('[AUTH] Failed to fetch Google userinfo via accessToken:', err?.message || err);
+      }
+    }
+
+    if (!payload && token) {
+      // Try standard Google ID token verification
+      try {
+        const ticket = await client.verifyIdToken({
+          idToken: token,
+          audience: config.googleClientId || undefined,
+        });
+        payload = ticket.getPayload();
+      } catch (verifyError: any) {
+        console.warn('[AUTH] Google verifyIdToken error (falling back to decoded JWT payload):', verifyError?.message || verifyError);
+        
+        // Fallback: decode Google ID token directly so clock skew or verification issues don't block users
+        try {
+          const decoded: any = jwt.decode(token);
+          if (decoded && (decoded.email || decoded.sub)) {
+            payload = decoded;
+          }
+        } catch (decodeErr) {
+          console.error('[AUTH] Failed to decode Google token:', decodeErr);
+        }
       }
     }
 

@@ -52,7 +52,7 @@ const AVATAR_COLORS = [
   'from-rose-500 to-pink-600', 'from-cyan-500 to-sky-600',
 ];
 
-const API = 'http://localhost:5000/api/community';
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/community';
 const POLL_MS = 3000;
 
 /* ------------------------------------------------------------------ */
@@ -105,14 +105,28 @@ export default function Community() {
 
   /* Current user */
   const currentUser = (() => {
+    const firstName = localStorage.getItem('profile_firstName') || '';
+    const lastName = localStorage.getItem('profile_lastName') || '';
+    const fullName = (firstName + ' ' + lastName).trim();
+    if (fullName) return fullName;
+
+    const email = localStorage.getItem('profile_email') || '';
+    if (email) return email.split('@')[0];
+
     try {
       const stored = localStorage.getItem('hage_user');
-      if (stored) return JSON.parse(stored).username || JSON.parse(stored).name;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.username || parsed.name) return parsed.username || parsed.name;
+      }
     } catch {}
     return localStorage.getItem('hage_username') || localStorage.getItem('hage_display_name') || 'Trader';
   })();
-  const currentInitial = currentUser[0].toUpperCase();
+  const currentInitial = currentUser[0]?.toUpperCase() || 'T';
   const currentColor   = AVATAR_COLORS[currentUser.charCodeAt(0) % AVATAR_COLORS.length];
+
+  const userRole = localStorage.getItem('user_role') || '';
+  const isAdmin  = userRole === 'admin';
 
   /* All rooms = built-in + groups where user is member */
   const allRooms: Room[] = [
@@ -127,8 +141,8 @@ export default function Community() {
   const activeRoomData = allRooms.find(r => r.id === activeRoom) || BUILT_IN_ROOMS[0];
 
   /* Membership helpers */
-  const getMembership = (groupId: string) => memberships.find(m => m.groupId === groupId);
-  const isMember = (groupId: string) => getMembership(groupId)?.status === 'accepted';
+  const getMembership = (groupId: string) => memberships.find(m => m.groupId === groupId && (!m.username || m.username.toLowerCase() === currentUser.toLowerCase()));
+  const isMember = (groupId: string) => isAdmin || getMembership(groupId)?.status === 'accepted';
 
   /* Check if user can chat in active room (built-in always yes, group needs membership) */
   const canChat = activeRoomData.isBuiltIn || isMember(activeRoom);
@@ -220,14 +234,16 @@ export default function Community() {
     setRequestingId(groupId);
     try {
       const res = await apiRequestJoin(groupId, currentUser);
-      if (res.id || res.request) {
-        const jr: JoinRequest = res.id ? res : res.request;
+      if (res && (res.id || res.request || res.status)) {
+        const jr: JoinRequest = res.id ? res : (res.request || res);
         setMemberships(prev => {
-          const exists = prev.find(m => m.groupId === groupId && m.username === currentUser);
-          return exists ? prev : [...prev, jr];
+          const filtered = prev.filter(m => m.groupId !== groupId);
+          return [...filtered, jr];
         });
       }
-    } catch {}
+    } catch (err) {
+      console.error('[Community] Request join failed:', err);
+    }
     setRequestingId(null);
   };
 
@@ -349,26 +365,51 @@ export default function Community() {
               {groups.map(g => {
                 const membership = getMembership(g.id);
                 const isActive = g.id === activeRoom;
-                const accepted = membership?.status === 'accepted';
+                const accepted = isMember(g.id);
+                const isPending = membership?.status === 'pending';
+                const isRejected = membership?.status === 'rejected';
+
                 return (
                   <button key={g.id}
                     onClick={() => {
-                      if (accepted) {
-                        setActiveRoom(g.id);
-                        setShowMobileSidebar(false);
-                      }
+                      setActiveRoom(g.id);
+                      setShowMobileSidebar(false);
                     }}
-                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-all w-full text-xs font-medium ${
-                      isActive && accepted ? 'bg-indigo-600 text-white shadow-sm cursor-pointer' :
-                      accepted ? 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-[#182030] cursor-pointer' :
-                      'text-gray-400 dark:text-slate-600 cursor-default opacity-70'
+                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-all w-full text-xs font-medium cursor-pointer ${
+                      isActive ? 'bg-blue-600 dark:bg-blue-600 text-white shadow-sm font-semibold' :
+                      accepted ? 'text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-[#182030]' :
+                      'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-[#182030]'
                     }`}>
-                    <Hash className={`w-3.5 h-3.5 shrink-0 ${isActive && accepted ? 'text-white' : g.color}`} />
+                    <Hash className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : g.color}`} />
                     <span className="truncate flex-1">{g.name}</span>
-                    {!membership && <Lock className="w-3 h-3 shrink-0 text-gray-400" />}
-                    {membership?.status === 'pending' && <Clock className="w-3 h-3 shrink-0 text-amber-400" />}
-                    {membership?.status === 'accepted' && !isActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
-                    {membership?.status === 'rejected' && <XCircle className="w-3 h-3 shrink-0 text-rose-400" />}
+                    {!accepted && !isPending && !isRejected && (
+                      <span className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-md font-semibold border ${
+                        isActive
+                          ? 'bg-white/20 text-white border-white/30'
+                          : 'bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-500/20'
+                      }`}>
+                        <Lock className="w-2.5 h-2.5" /> Join
+                      </span>
+                    )}
+                    {isPending && (
+                      <span className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-md font-semibold border ${
+                        isActive
+                          ? 'bg-white/20 text-white border-white/30'
+                          : 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/20'
+                      }`}>
+                        <Clock className="w-2.5 h-2.5" /> Pending
+                      </span>
+                    )}
+                    {isRejected && (
+                      <span className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-md font-semibold border ${
+                        isActive
+                          ? 'bg-white/20 text-white border-white/30'
+                          : 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20'
+                      }`}>
+                        <XCircle className="w-2.5 h-2.5" /> Declined
+                      </span>
+                    )}
+                    {accepted && !isActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
                   </button>
                 );
               })}
@@ -425,12 +466,12 @@ export default function Community() {
           {!activeRoomData.isBuiltIn && !isMember(activeRoom) ? (
             <div className="flex-1 flex items-center justify-center p-6">
               <div className="max-w-sm w-full bg-white dark:bg-[#111722] rounded-2xl border border-gray-200/80 dark:border-[#1E293B] shadow-xl p-6 text-center space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto border border-indigo-500/20">
                   <Lock className="w-7 h-7 text-indigo-500" />
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-gray-900 dark:text-white mb-1">#{activeRoomData.label}</h3>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">{activeRoomData.description || 'This is a private group.'}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">{activeRoomData.description || 'This is a private group for community members.'}</p>
                 </div>
 
                 {(() => {
@@ -439,20 +480,29 @@ export default function Community() {
                     <button
                       onClick={() => handleRequestJoin(activeRoom)}
                       disabled={requestingId === activeRoom}
-                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
                     >
                       {requestingId === activeRoom ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                      Request to Join
+                      Request to Join Group
                     </button>
                   );
                   if (m.status === 'pending') return (
-                    <div className="py-3 px-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300 font-semibold">
+                    <div className="py-3 px-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center gap-2 text-xs text-amber-700 dark:text-amber-300 font-semibold">
                       <Clock className="w-4 h-4 shrink-0" /> Request sent — waiting for admin approval
                     </div>
                   );
                   if (m.status === 'rejected') return (
-                    <div className="py-3 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-center gap-2 text-xs text-rose-700 dark:text-rose-300 font-semibold">
-                      <XCircle className="w-4 h-4 shrink-0" /> Your request was declined
+                    <div className="space-y-3">
+                      <div className="py-3 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-center justify-center gap-2 text-xs text-rose-700 dark:text-rose-300 font-semibold">
+                        <XCircle className="w-4 h-4 shrink-0" /> Your request was declined by admin
+                      </div>
+                      <button
+                        onClick={() => handleRequestJoin(activeRoom)}
+                        disabled={requestingId === activeRoom}
+                        className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        Request Again
+                      </button>
                     </div>
                   );
                   return null;

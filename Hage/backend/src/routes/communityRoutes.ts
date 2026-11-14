@@ -3,9 +3,14 @@ import {
   getGroups, createGroup, deleteGroup,
   getJoinRequests, requestJoin, resolveJoinRequest, getMyMemberships,
   getMessagesHandler, postMessage, reactToMessage, deleteMessage,
+  heartbeat, getOnlineUsers
 } from '../controllers/communityController';
 
 const router = express.Router();
+
+// Presence
+router.post('/heartbeat', heartbeat);
+router.get('/online', getOnlineUsers);
 
 // Groups
 router.get('/groups',       getGroups);

@@ -2,7 +2,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/Card';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleAuthButton } from '../components/ui/GoogleAuthButton';
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { hasUserPurchasedPlan } from '../store/subscriptionRules';
@@ -168,30 +168,21 @@ export default function Login() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleAuthSuccess = async (authData: any) => {
     try {
-      const { credential } = credentialResponse;
-      if (!credential) {
-        setError('No Google credentials received. Please try again.');
-        return;
-      }
-      const res = await axios.post('http://localhost:5000/api/auth/google', {
-        token: credential
-      });
-      
-      localStorage.setItem('token', res.data.token);
-      const userRole = res.data.role || 'user';
+      localStorage.setItem('token', authData.token);
+      const userRole = authData.role || 'user';
       localStorage.setItem('user_role', userRole);
       localStorage.setItem('profile_role', userRole);
-      localStorage.setItem('profile_email', res.data.email);
-      const fullName = (res.data.name || '').trim();
+      localStorage.setItem('profile_email', authData.email);
+      const fullName = (authData.name || '').trim();
       const nameParts = fullName.split(' ');
       localStorage.setItem('profile_firstName', nameParts[0] || 'User');
       localStorage.setItem('profile_lastName', nameParts.slice(1).join(' ') || '');
       
-      const plan          = res.data.subscriptionPlan || 'None';
-      const subStatus     = res.data.subscriptionStatus || 'Pending Payment';
-      const paymentMethod = res.data.paymentMethod || '';
+      const plan          = authData.subscriptionPlan || 'None';
+      const subStatus     = authData.subscriptionStatus || 'Pending Payment';
+      const paymentMethod = authData.paymentMethod || '';
       localStorage.setItem('user_subscription_status', subStatus);
       localStorage.setItem('profile_status', subStatus);
       localStorage.setItem('profile_plan', plan);
@@ -224,10 +215,10 @@ export default function Login() {
       }
 
       // Load this user's personal trading store
-      switchActiveUser(res.data.email);
+      switchActiveUser(authData.email);
 
-      // Sync authoritative subscription data from backend (catches post-payment updates)
-      await refreshSubscriptionFromBackend(res.data.token);
+      // Sync authoritative subscription data from backend
+      await refreshSubscriptionFromBackend(authData.token);
 
       if (userRole === 'admin') {
         navigate('/portal');
@@ -237,14 +228,9 @@ export default function Login() {
         navigate('/dashboard');
       }
     } catch (err: any) {
-      console.error('Google login error:', err);
-      const serverMsg = err.response?.data?.message;
-      setError(serverMsg || 'Failed to login with Google. Please try again.');
+      console.error('Google auth processing error:', err);
+      setError('Failed to complete Google Sign-In.');
     }
-  };
-
-  const handleGoogleError = () => {
-    setError('Google Sign-In was unsuccessful.');
   };
 
   return (
@@ -318,13 +304,11 @@ export default function Login() {
 
             <div className="mt-6 flex justify-center">
               <div className="w-full flex justify-center">
-                <GoogleLogin 
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="outline"
-                  size="large"
-                  text="continue_with"
-                  width="350"
+                <GoogleAuthButton 
+                  text="Sign in with Google"
+                  onSuccess={handleGoogleAuthSuccess}
+                  onError={(msg) => setError(msg)}
+                  disabled={submitting}
                 />
               </div>
             </div>

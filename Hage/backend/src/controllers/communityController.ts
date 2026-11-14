@@ -79,16 +79,26 @@ export const requestJoin = (req: Request, res: Response) => {
   const group = s.communityGroups.find((g: any) => g.id === groupId);
   if (!group) return res.status(404).json({ message: 'Group not found' });
 
+  const cleanUser = String(username).trim();
   const existing = s.communityJoinReqs.find(
-    (r: any) => r.groupId === groupId && r.username === username
+    (r: any) => r.groupId === groupId && String(r.username || '').toLowerCase() === cleanUser.toLowerCase()
   );
-  if (existing) return res.status(409).json({ message: 'Request already exists', request: existing });
+
+  if (existing) {
+    if (existing.status === 'rejected') {
+      existing.status = 'pending';
+      existing.requestedAt = new Date().toISOString();
+      existing.resolvedAt = null;
+      save();
+    }
+    return res.status(200).json(existing);
+  }
 
   const jr = {
     id: `jr_${Date.now()}`,
     groupId,
     groupName: group.name,
-    username,
+    username: cleanUser,
     status: 'pending',
     requestedAt: new Date().toISOString(),
     resolvedAt: null as string | null,
@@ -127,7 +137,8 @@ export const resolveJoinRequest = (req: Request, res: Response) => {
 export const getMyMemberships = (req: Request, res: Response) => {
   initStore();
   const { username } = req.query;
-  res.json(getS().communityJoinReqs.filter((r: any) => r.username === username));
+  const target = String(username || '').trim().toLowerCase();
+  res.json(getS().communityJoinReqs.filter((r: any) => String(r.username || '').trim().toLowerCase() === target));
 };
 
 /* ════════════════════════════════════════
@@ -220,3 +231,70 @@ export const deleteMessage = (req: Request, res: Response) => {
   save();
   res.json({ success: true });
 };
+
+/* ════════════════════════════════════════
+   ONLINE PRESENCE TRACKING
+════════════════════════════════════════ */
+interface OnlineUser {
+  username: string;
+  initial: string;
+  color: string;
+  lastSeen: number;
+}
+
+const activeOnlineUsers = new Map<string, OnlineUser>();
+const PRESENCE_TIMEOUT_MS = 30000; // 30 seconds
+
+export const heartbeat = (req: Request, res: Response) => {
+  const { username, color } = req.body;
+  const cleanUser = String(username || '').trim();
+  if (!cleanUser) return res.status(400).json({ message: 'username required' });
+
+  const now = Date.now();
+
+  // Prune inactive users
+  for (const [key, user] of activeOnlineUsers.entries()) {
+    if (now - user.lastSeen > PRESENCE_TIMEOUT_MS) {
+      activeOnlineUsers.delete(key);
+    }
+  }
+
+  activeOnlineUsers.set(cleanUser.toLowerCase(), {
+    username: cleanUser,
+    initial: cleanUser.charAt(0).toUpperCase() || 'U',
+    color: color || 'from-blue-500 to-indigo-600',
+    lastSeen: now,
+  });
+
+  const members = Array.from(activeOnlineUsers.values()).map(u => ({
+    username: u.username,
+    initial: u.initial,
+    color: u.color,
+  }));
+
+  res.json({
+    count: activeOnlineUsers.size,
+    members,
+  });
+};
+
+export const getOnlineUsers = (_req: Request, res: Response) => {
+  const now = Date.now();
+  for (const [key, user] of activeOnlineUsers.entries()) {
+    if (now - user.lastSeen > PRESENCE_TIMEOUT_MS) {
+      activeOnlineUsers.delete(key);
+    }
+  }
+
+  const members = Array.from(activeOnlineUsers.values()).map(u => ({
+    username: u.username,
+    initial: u.initial,
+    color: u.color,
+  }));
+
+  res.json({
+    count: activeOnlineUsers.size,
+    members,
+  });
+};
+

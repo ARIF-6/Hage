@@ -2,14 +2,14 @@
  * CryptoPaymentModal.tsx
  *
  * Professional Web3 Crypto Checkout for USDT on BNB Smart Chain (BEP20).
+ * Strict Design System: Navy Blue (#0E235C) | Pure White (#FFFFFF) | Accent Blue (#3B82F6)
+ *
  * Features:
- * - Institutional-grade styling & glassmorphism
  * - 2-Step interactive flow (Wallet Input → Invoice & Live Settlement)
  * - 1-Click Clipboard paste & copy
  * - Real-time address validation & BSC EVM format check
  * - High-contrast QR code for mobile wallet scanning
  * - Auto-polling on BNB Smart Chain via NOWPayments
- * - Dev simulation trigger for testing
  */
 import { useEffect, useState, useCallback } from 'react';
 import {
@@ -23,14 +23,12 @@ import {
   X,
   ArrowRight,
   ArrowLeft,
-  Zap,
   ClipboardPaste,
 } from 'lucide-react';
 import {
   createPayment,
   fetchPaymentStatus,
   pollUntilSettled,
-  simulatePaymentSuccess,
   statusLabel,
   isPaymentSuccess,
   type CreatePaymentResponse,
@@ -85,12 +83,10 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
       setAddressError('Please enter your crypto wallet address.');
       return;
     }
-
     if (!trimmed.startsWith('0x')) {
       setAddressError('BEP20 addresses must start with "0x".');
       return;
     }
-
     if (trimmed.length !== 42 || !/^0x[a-fA-F0-9]{40}$/.test(trimmed)) {
       setAddressError('Please enter a valid 42-character BSC wallet address.');
       return;
@@ -219,31 +215,53 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      style={{ backgroundColor: 'rgba(14, 35, 92, 0.85)', backdropFilter: 'blur(12px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-      <div className="w-full max-w-lg bg-[#0b0f19] border border-slate-800 rounded-3xl shadow-2xl shadow-black/80 overflow-hidden max-h-[92vh] flex flex-col">
+      <div
+        className="w-full max-w-lg rounded-3xl overflow-hidden max-h-[92vh] flex flex-col"
+        style={{
+          backgroundColor: '#0E235C',
+          border: '2px solid rgba(255, 255, 255, 0.18)',
+          boxShadow: '0 25px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+        }}
+      >
 
-        {/* ─── Top Header (Always Visible & Pinned) ─────────────────────────── */}
-        <div className="px-6 pt-5 pb-4 border-b border-slate-800/80 bg-[#0d1322] shrink-0 sticky top-0 z-20">
+        {/* ─── Top Header ──────────────────────────────────────────────────── */}
+        <div
+          className="px-6 pt-5 pb-4 shrink-0"
+          style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.12)' }}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Dual Token / Network Badge */}
-              <div className="relative flex items-center">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner">
-                  <span className="text-emerald-400 font-extrabold text-xs tracking-tight">₮</span>
+              {/* Token Badge */}
+              <div
+                className="relative flex items-center"
+              >
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1.5px solid rgba(255, 255, 255, 0.25)' }}
+                >
+                  <span style={{ color: '#FFFFFF', fontWeight: 800, fontSize: 14 }}>₮</span>
                 </div>
-                <div className="w-5 h-5 -ml-2.5 -mt-4 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[10px] text-amber-300 font-bold">
+                <div
+                  className="w-5 h-5 -ml-2.5 -mt-4 rounded-full flex items-center justify-center text-[10px] font-bold"
+                  style={{ backgroundColor: '#2563EB', border: '1px solid #60A5FA', color: '#FFFFFF' }}
+                >
                   B
                 </div>
               </div>
               <div>
-                <h3 className="text-white font-bold text-base tracking-tight flex items-center gap-2">
+                <h3 className="font-bold text-base tracking-tight flex items-center gap-2" style={{ color: '#FFFFFF' }}>
                   Crypto Checkout
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.25)' }}
+                  >
                     USDT • BEP20
                   </span>
                 </h3>
-                <p className="text-slate-400 text-xs">BNB Smart Chain — Powered by NOWPayments</p>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>BNB Smart Chain — Powered by NOWPayments</p>
               </div>
             </div>
 
@@ -252,7 +270,8 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                 <button
                   type="button"
                   onClick={() => setPhase('address_input')}
-                  className="text-slate-200 hover:text-white transition-colors rounded-xl px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700/80 cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+                  className="transition-all rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.25)' }}
                   title="Go back to wallet input"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -263,9 +282,11 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
               <button
                 type="button"
                 onClick={onClose}
-                className="text-slate-400 hover:text-white transition-colors rounded-xl p-2 hover:bg-slate-800/80 cursor-pointer"
+                className="transition-colors rounded-xl p-2 cursor-pointer"
+                style={{ color: 'rgba(255,255,255,0.5)' }}
                 aria-label="Close"
-                title="Cancel & Close"
+                onMouseEnter={e => (e.currentTarget.style.color = '#FFFFFF')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -275,87 +296,106 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
           {/* Stepper Progress Bar */}
           <div className="flex items-center gap-2 mt-4">
             <div className="flex items-center gap-2 flex-1">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                phase === 'address_input'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-emerald-500 text-white'
-              }`}>
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  color: '#0E235C',
+                }}
+              >
                 {phase === 'address_input' ? '1' : <Check className="w-3 h-3" />}
               </div>
-              <span className={`text-xs font-semibold ${
-                phase === 'address_input' ? 'text-white' : 'text-slate-400'
-              }`}>
-                Your Wallet
-              </span>
+              <span className="text-xs font-semibold" style={{ color: '#FFFFFF' }}>Your Wallet</span>
             </div>
 
-            <div className="w-8 h-px bg-slate-800" />
+            <div className="w-8 h-px" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }} />
 
             <div className="flex items-center gap-2 flex-1">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                phase === 'address_input'
-                  ? 'bg-slate-800 text-slate-500'
-                  : phase === 'success'
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-blue-600 text-white'
-              }`}>
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style={{
+                  backgroundColor: phase === 'address_input'
+                    ? 'rgba(255,255,255,0.1)'
+                    : '#FFFFFF',
+                  color: phase === 'address_input' ? 'rgba(255,255,255,0.4)' : '#0E235C',
+                }}
+              >
                 {phase === 'success' ? <Check className="w-3 h-3" /> : '2'}
               </div>
-              <span className={`text-xs font-semibold ${
-                phase === 'address_input' ? 'text-slate-500' : 'text-white'
-              }`}>
+              <span
+                className="text-xs font-semibold"
+                style={{ color: phase === 'address_input' ? 'rgba(255,255,255,0.4)' : '#FFFFFF' }}
+              >
                 Transfer & Confirm
               </span>
             </div>
           </div>
         </div>
 
-        {/* ─── Body Content (Scrollable within modal only) ─────────────────────── */}
+        {/* ─── Body Content (Scrollable) ──────────────────────────────────── */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1 overscroll-contain">
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              STEP 1: Enter Crypto Address Form
-             ═════════════════════════════════════════════════════════════════════ */}
+          {/* ══ STEP 1: Enter Crypto Address Form ══════════════════════════ */}
           {phase === 'address_input' && (
             <form onSubmit={handleProceedToInvoice} className="space-y-6">
 
-              {/* Order Summary Glass Card */}
-              <div className="rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-900/40 border border-slate-800/80 p-4">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800/60">
+              {/* Order Summary Card */}
+              <div
+                className="rounded-2xl p-4"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                  border: '1.5px solid rgba(255, 255, 255, 0.15)',
+                }}
+              >
+                <div
+                  className="flex items-center justify-between pb-3"
+                  style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}
+                >
                   <div className="space-y-0.5">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Subscription Plan</span>
-                    <p className="text-white font-bold text-base tracking-tight">{planLabel}</p>
+                    <span
+                      className="text-[11px] font-bold uppercase tracking-wider"
+                      style={{ color: 'rgba(255,255,255,0.6)' }}
+                    >
+                      Subscription Plan
+                    </span>
+                    <p className="font-bold text-base tracking-tight" style={{ color: '#FFFFFF' }}>
+                      {planLabel}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-[11px] text-slate-400">Total Due</span>
-                    <p className="text-2xl font-black text-white tracking-tight leading-none mt-0.5">
+                    <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.6)' }}>Total Due</span>
+                    <p className="text-2xl font-black tracking-tight leading-none mt-0.5" style={{ color: '#FFFFFF' }}>
                       ${usdAmount.toFixed(2)}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 text-xs">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#60A5FA' }} />
                     <span>Fixed Exchange Rate (1:1)</span>
                   </div>
-                  <span className="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span
+                    className="font-mono font-bold px-2.5 py-0.5 rounded-full"
+                    style={{ color: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)' }}
+                  >
                     {usdAmount.toFixed(2)} USDT
                   </span>
                 </div>
               </div>
 
-              {/* Wallet Address Input Field */}
+              {/* Wallet Address Input */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+                  <label className="text-sm font-bold flex items-center gap-1.5" style={{ color: '#FFFFFF' }}>
                     Your Sender Wallet Address
-                    <span className="text-rose-400 text-xs">*</span>
+                    <span className="text-xs" style={{ color: '#60A5FA' }}>*</span>
                   </label>
                   <button
                     type="button"
                     onClick={handlePasteAddress}
-                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-semibold cursor-pointer"
+                    className="text-xs flex items-center gap-1 font-semibold cursor-pointer transition-colors"
+                    style={{ color: '#FFFFFF' }}
                   >
                     <ClipboardPaste className="w-3.5 h-3.5" />
                     Paste
@@ -373,27 +413,35 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                     placeholder="0x..."
                     autoFocus
                     spellCheck={false}
-                    className={`w-full py-3.5 pl-11 pr-24 rounded-2xl bg-slate-900/80 border text-slate-100 placeholder-slate-600 text-sm font-mono transition-all outline-none ${
-                      addressError
-                        ? 'border-rose-500/70 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                    className="w-full py-3.5 pl-11 pr-24 rounded-2xl text-sm font-mono transition-all outline-none"
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.06)',
+                      border: addressError
+                        ? '1.5px solid #F87171'
                         : isAddressValid(userWalletAddress)
-                        ? 'border-emerald-500/60 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                        : 'border-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
-                    }`}
+                        ? '1.5px solid #60A5FA'
+                        : '1.5px solid rgba(255, 255, 255, 0.2)',
+                      color: '#FFFFFF',
+                    }}
                   />
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <div
+                    className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
+                    style={{ color: 'rgba(255,255,255,0.4)' }}
+                  >
                     <Wallet className="w-4 h-4" />
                   </div>
 
-                  {/* Validation status badge inside input */}
                   {userWalletAddress && (
                     <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
                       {isAddressValid(userWalletAddress) ? (
-                        <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        <span
+                          className="text-[11px] font-semibold flex items-center gap-1 px-2 py-0.5 rounded-full"
+                          style={{ color: '#FFFFFF', backgroundColor: 'rgba(59,130,246,0.3)', border: '1px solid rgba(59,130,246,0.5)' }}
+                        >
                           <Check className="w-3 h-3" /> Valid BSC
                         </span>
                       ) : (
-                        <span className="text-[11px] font-mono text-slate-500">
+                        <span className="text-[11px] font-mono" style={{ color: 'rgba(255,255,255,0.4)' }}>
                           {userWalletAddress.length}/42
                         </span>
                       )}
@@ -402,32 +450,40 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                 </div>
 
                 {addressError ? (
-                  <p className="text-xs text-rose-400 flex items-center gap-1.5 pt-1">
+                  <p className="text-xs flex items-center gap-1.5 pt-1" style={{ color: '#F87171' }}>
                     <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                     {addressError}
                   </p>
                 ) : (
-                  <p className="text-xs text-slate-400 leading-relaxed pt-0.5">
+                  <p className="text-xs leading-relaxed pt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     Enter the address you will transfer from (MetaMask, Trust Wallet, Binance, etc.) for instant automated settlement.
                   </p>
                 )}
               </div>
-
-
 
               {/* Actions */}
               <div className="flex items-center gap-3 pt-1">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700/80 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                  className="px-5 py-3.5 rounded-2xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                  }}
                 >
                   <X className="w-4 h-4" />
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-sm shadow-xl shadow-blue-900/25 transition-all cursor-pointer active:scale-[0.99]"
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 px-5 rounded-2xl font-extrabold text-sm transition-all cursor-pointer active:scale-[0.99]"
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    color: '#0E235C',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+                  }}
                 >
                   Continue to Payment Invoice
                   <ArrowRight className="w-4 h-4" />
@@ -436,44 +492,51 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
             </form>
           )}
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              STEP 2: Creating State
-             ═════════════════════════════════════════════════════════════════════ */}
+          {/* ══ STEP 2: Creating State ════════════════════════════════════ */}
           {phase === 'creating' && (
             <div className="flex flex-col items-center justify-center py-14 gap-4">
               <div className="relative">
-                <div className="w-14 h-14 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin" />
-                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-blue-400">
+                <div
+                  className="w-14 h-14 rounded-full border-4 animate-spin"
+                  style={{ borderColor: 'rgba(255,255,255,0.2)', borderTopColor: '#FFFFFF' }}
+                />
+                <div
+                  className="absolute inset-0 flex items-center justify-center text-xs font-bold"
+                  style={{ color: '#FFFFFF' }}
+                >
                   ₮
                 </div>
               </div>
               <div className="text-center space-y-1">
-                <p className="text-white text-base font-bold">{statusMsg}</p>
-                <p className="text-slate-400 text-xs">Generating your unique NOWPayments deposit address…</p>
+                <p className="text-base font-bold" style={{ color: '#FFFFFF' }}>{statusMsg}</p>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Generating your unique NOWPayments deposit address…</p>
               </div>
             </div>
           )}
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              STEP 3: Error State
-             ═════════════════════════════════════════════════════════════════════ */}
+          {/* ══ STEP 3: Error State ══════════════════════════════════════ */}
           {phase === 'error' && (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-1">
-                <AlertTriangle className="w-7 h-7" />
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-1"
+                style={{ backgroundColor: 'rgba(239,68,68,0.15)', border: '1.5px solid rgba(239,68,68,0.3)' }}
+              >
+                <AlertTriangle className="w-7 h-7 text-rose-400" />
               </div>
-              <h4 className="text-white font-bold text-lg">Unable to Create Invoice</h4>
-              <p className="text-rose-300 text-xs max-w-sm leading-relaxed">{errorMsg}</p>
+              <h4 className="font-bold text-lg" style={{ color: '#FFFFFF' }}>Unable to Create Invoice</h4>
+              <p className="text-xs max-w-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>{errorMsg}</p>
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setPhase('address_input')}
-                  className="px-5 py-2.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer"
+                  className="px-5 py-2.5 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  style={{ backgroundColor: '#FFFFFF', color: '#0E235C' }}
                 >
                   Try Again
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-5 py-2.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+                  className="px-5 py-2.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   Cancel
                 </button>
@@ -481,42 +544,50 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
             </div>
           )}
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              STEP 4: Success State
-             ═════════════════════════════════════════════════════════════════════ */}
+          {/* ══ STEP 4: Success State ════════════════════════════════════ */}
           {phase === 'success' && (
-            <div className="flex flex-col items-center justify-center py-10 gap-4 text-center animate-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-xl shadow-emerald-500/10">
-                <CheckCircle2 className="w-10 h-10" />
+            <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  border: '2px solid rgba(255,255,255,0.5)',
+                  boxShadow: '0 0 32px rgba(255,255,255,0.25)',
+                }}
+              >
+                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-white font-black text-2xl tracking-tight">Payment Verified! 🎉</h4>
-                <p className="text-emerald-300 text-sm font-semibold">Your {planLabel} plan is now fully active.</p>
-                <p className="text-slate-400 text-xs pt-1">Redirecting to your trading dashboard…</p>
+                <h4 className="font-black text-2xl tracking-tight" style={{ color: '#FFFFFF' }}>Payment Verified! 🎉</h4>
+                <p className="text-sm font-semibold" style={{ color: '#FFFFFF' }}>Your {planLabel} plan is now fully active.</p>
+                <p className="text-xs pt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>Redirecting to your trading dashboard…</p>
               </div>
             </div>
           )}
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              STEP 5: Failed State
-             ═════════════════════════════════════════════════════════════════════ */}
+          {/* ══ STEP 5: Failed State ════════════════════════════════════ */}
           {phase === 'failed' && (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-1">
-                <AlertTriangle className="w-7 h-7" />
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-1"
+                style={{ backgroundColor: 'rgba(239,68,68,0.15)', border: '1.5px solid rgba(239,68,68,0.3)' }}
+              >
+                <AlertTriangle className="w-7 h-7 text-rose-400" />
               </div>
-              <h4 className="text-white font-bold text-lg">Payment Expired or Incomplete</h4>
-              <p className="text-amber-300 text-xs max-w-sm leading-relaxed">{statusMsg}</p>
+              <h4 className="font-bold text-lg" style={{ color: '#FFFFFF' }}>Payment Expired or Incomplete</h4>
+              <p className="text-xs max-w-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>{statusMsg}</p>
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setPhase('address_input')}
-                  className="px-5 py-2.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer"
+                  className="px-5 py-2.5 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  style={{ backgroundColor: '#FFFFFF', color: '#0E235C' }}
                 >
                   Start Over
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-5 py-2.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+                  className="px-5 py-2.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   Close
                 </button>
@@ -524,60 +595,77 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
             </div>
           )}
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              STEP 6: Waiting for Payment (Invoice Details & Live Checking)
-             ═════════════════════════════════════════════════════════════════════ */}
+          {/* ══ STEP 6: Waiting for Payment (Invoice + Live Checking) ══ */}
           {phase === 'waiting' && invoice && (
             <div className="space-y-5">
 
               {/* Live Status Pill */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
+              <div
+                className="flex items-center justify-between p-3.5 rounded-2xl"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)', border: '1.5px solid rgba(255, 255, 255, 0.18)' }}
+              >
                 <div className="flex items-center gap-2.5">
                   <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    <span
+                      className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                      style={{ backgroundColor: '#60A5FA' }}
+                    />
+                    <span
+                      className="relative inline-flex rounded-full h-2.5 w-2.5"
+                      style={{ backgroundColor: '#60A5FA' }}
+                    />
                   </span>
                   <div>
-                    <p className="text-white text-xs font-bold tracking-tight">{statusMsg}</p>
-                    <p className="text-slate-400 text-[10px]">Listening to BNB Smart Chain blocks…</p>
+                    <p className="text-xs font-bold tracking-tight" style={{ color: '#FFFFFF' }}>{statusMsg}</p>
+                    <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.5)' }}>Listening to BNB Smart Chain blocks…</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-slate-300 text-xs font-mono bg-slate-800/70 px-2.5 py-1 rounded-lg border border-slate-700/50">
-                  <Clock className="w-3.5 h-3.5 text-blue-400" />
+                <div
+                  className="flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-lg"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.07)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.2)' }}
+                >
+                  <Clock className="w-3.5 h-3.5" />
                   {formatElapsed(elapsed)}
                 </div>
               </div>
 
-              {/* QR Code and Mobile Instructions */}
+              {/* QR Code */}
               <div className="flex flex-col items-center justify-center gap-2 py-1">
                 {qrUrl && (
-                  <div className="p-3.5 bg-white rounded-3xl shadow-2xl shadow-black/80">
+                  <div className="p-3.5 bg-white rounded-3xl shadow-2xl">
                     <img src={qrUrl} alt="Deposit QR Code" className="w-40 h-40" />
                   </div>
                 )}
-                <span className="text-[11px] text-slate-400 font-medium pt-1">
+                <span className="text-[11px] font-medium pt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   Scan with MetaMask, Binance, or Trust Wallet
                 </span>
               </div>
 
               {/* Amount to Send Box */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400">
+                <div
+                  className="flex items-center justify-between text-xs font-bold uppercase tracking-wider"
+                  style={{ color: 'rgba(255,255,255,0.6)' }}
+                >
                   <span>Exact Amount to Transfer</span>
-                  <span className="text-emerald-400 font-semibold normal-case">USDT (BEP20)</span>
+                  <span style={{ color: '#FFFFFF', fontWeight: 600 }}>USDT (BEP20)</span>
                 </div>
-                <div className="flex items-center gap-3 p-3.5 bg-slate-900/80 border border-emerald-500/30 rounded-2xl">
-                  <span className="text-emerald-400 font-mono font-extrabold text-xl flex-1 tracking-tight">
+                <div
+                  className="flex items-center gap-3 p-3.5 rounded-2xl"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)', border: '1.5px solid rgba(255, 255, 255, 0.2)' }}
+                >
+                  <span className="font-mono font-extrabold text-xl flex-1 tracking-tight" style={{ color: '#FFFFFF' }}>
                     {invoice.payAmount} USDT
                   </span>
                   <button
                     type="button"
                     onClick={() => copyText(String(invoice.payAmount), 'amount')}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.25)' }}
                   >
                     {copied === 'amount' ? (
-                      <span className="text-emerald-400 flex items-center gap-1">
+                      <span className="flex items-center gap-1">
                         <Check className="w-3.5 h-3.5" /> Copied
                       </span>
                     ) : (
@@ -591,21 +679,31 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
 
               {/* Deposit Address Box */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400">
+                <div
+                  className="flex items-center justify-between text-xs font-bold uppercase tracking-wider"
+                  style={{ color: 'rgba(255,255,255,0.6)' }}
+                >
                   <span>Send to Deposit Address</span>
-                  <span className="text-amber-400 font-semibold normal-case">BNB Smart Chain</span>
+                  <span style={{ color: '#FFFFFF', fontWeight: 600 }}>BNB Smart Chain</span>
                 </div>
-                <div className="flex items-center gap-2 p-3.5 bg-slate-900/80 border border-slate-800 rounded-2xl">
-                  <span className="text-slate-200 text-xs font-mono break-all flex-1 select-all leading-relaxed">
+                <div
+                  className="flex items-center gap-2 p-3.5 rounded-2xl"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1.5px solid rgba(255, 255, 255, 0.18)' }}
+                >
+                  <span
+                    className="text-xs font-mono break-all flex-1 select-all leading-relaxed"
+                    style={{ color: '#FFFFFF' }}
+                  >
                     {invoice.payAddress}
                   </span>
                   <button
                     type="button"
                     onClick={() => copyText(invoice.payAddress, 'address')}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.25)' }}
                   >
                     {copied === 'address' ? (
-                      <span className="text-emerald-400 flex items-center gap-1">
+                      <span className="flex items-center gap-1">
                         <Check className="w-3.5 h-3.5" /> Copied
                       </span>
                     ) : (
@@ -618,23 +716,31 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
               </div>
 
               {/* Sender Wallet verification */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 text-xs">
-                <span className="text-slate-400">Your Sender Wallet:</span>
-                <span className="text-slate-300 font-mono text-[11px] truncate max-w-[220px]">
+              <div
+                className="flex items-center justify-between p-3 rounded-xl text-xs"
+                style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+              >
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Your Sender Wallet:</span>
+                <span className="font-mono text-[11px] truncate max-w-[220px]" style={{ color: '#FFFFFF' }}>
                   {userWalletAddress}
                 </span>
               </div>
 
-              {/* Action Button: Real Blockchain Checkup */}
+              {/* Check Now / Submit Button */}
               <div className="space-y-2.5 pt-1">
                 <button
                   type="button"
                   onClick={handleCheckNow}
                   disabled={checkingNow}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50 cursor-pointer active:scale-[0.99]"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all disabled:opacity-50 cursor-pointer active:scale-[0.99]"
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    color: '#0E235C',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+                  }}
                 >
                   <RefreshCw className={`w-4 h-4 ${checkingNow ? 'animate-spin' : ''}`} />
-                  {checkingNow ? 'Verifying Payment…' : 'Submit Payment'}
+                  {checkingNow ? 'Verifying Payment…' : 'Check Payment Status'}
                 </button>
 
                 {/* Back and Cancel Navigation Buttons */}
@@ -642,7 +748,8 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                   <button
                     type="button"
                     onClick={() => setPhase('address_input')}
-                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700/80 transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-xs transition-all cursor-pointer"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)' }}
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     Back to Wallet
@@ -650,7 +757,8 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                   <button
                     type="button"
                     onClick={onClose}
-                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-900 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 font-semibold text-xs border border-slate-800 hover:border-rose-500/30 transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-xs transition-all cursor-pointer"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
                   >
                     <X className="w-3.5 h-3.5" />
                     Cancel & Exit
@@ -659,12 +767,15 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
               </div>
 
               {/* Network Warning Box */}
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300/90 space-y-1">
-                <div className="flex items-center gap-1.5 font-bold text-amber-300">
+              <div
+                className="p-3.5 rounded-2xl text-xs space-y-1"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)' }}
+              >
+                <div className="flex items-center gap-1.5 font-bold" style={{ color: '#60A5FA' }}>
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>Only send USDT via BEP20 (Binance Smart Chain)</span>
                 </div>
-                <p className="text-[11px] text-amber-300/70 leading-relaxed pl-5">
+                <p className="text-[11px] leading-relaxed pl-5" style={{ color: 'rgba(255,255,255,0.65)' }}>
                   Do not send via Tron (TRC20), Ethereum (ERC20), or Solana. Transactions sent on the wrong network cannot be recovered.
                 </p>
               </div>

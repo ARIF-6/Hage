@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { 
   Wallet, Building2, TrendingUp, TrendingDown, ArrowUpRight, 
-  ArrowDownRight, History, Layers, Plus, Minus, AlertCircle, X, DollarSign, Clock
+  ArrowDownRight, History, Layers, Plus, Minus, AlertCircle, X, DollarSign
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { useTradeStore, type Campaign } from '../../store/useTradeStore';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
 
 interface RealAccountCardProps {
   campaign: Campaign;
@@ -17,7 +16,6 @@ export function RealAccountCard({ campaign }: RealAccountCardProps) {
 
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
-  const [showTransactions, setShowTransactions] = useState(false);
 
   const [depositAmount, setDepositAmount] = useState('');
   const [depositNote, setDepositNote] = useState('');
@@ -206,45 +204,7 @@ export function RealAccountCard({ campaign }: RealAccountCardProps) {
 
           </div>
 
-          {/* Transactions Ledger Toggle & List */}
-          {accountTransactions.length > 0 && (
-            <div className="pt-2">
-              <button
-                onClick={() => setShowTransactions(!showTransactions)}
-                className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 mb-2"
-              >
-                <Clock className="w-3.5 h-3.5" />
-                <span>{showTransactions ? 'Hide' : 'View'} Account Transactions ({accountTransactions.length})</span>
-              </button>
 
-              {showTransactions && (
-                <div className="p-2.5 rounded-xl bg-gray-50/70 dark:bg-[#182030]/60 border border-gray-200/60 dark:border-slate-800 space-y-2 max-h-48 overflow-y-auto custom-scrollbar text-xs">
-                  {accountTransactions.map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#111722] border border-gray-100 dark:border-slate-800">
-                      <div className="flex items-center gap-2">
-                        <span className={`p-1 rounded-md text-[10px] font-black ${
-                          tx.type === 'Deposit'
-                            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400'
-                            : 'bg-rose-50 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400'
-                        }`}>
-                          {tx.type === 'Deposit' ? <Plus className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-                        </span>
-                        <div>
-                          <span className="font-bold text-gray-900 dark:text-white block text-xs">{tx.note || tx.type}</span>
-                          <span className="text-[10px] text-gray-400">{format(new Date(tx.date), 'MMM d, yyyy HH:mm')}</span>
-                        </div>
-                      </div>
-                      <span className={`font-mono font-bold ${
-                        tx.type === 'Deposit' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                      }`}>
-                        {tx.type === 'Deposit' ? '+' : '-'}${tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Trade History Footer Summary */}
           <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-[#1E293B] text-xs text-gray-500 dark:text-slate-400">

@@ -14,19 +14,19 @@ function getNowApiBase(): string {
 }
 
 // ─── Plan duration map (months) ───────────────────────────────────────────────
-const PLAN_MONTHS: Record<string, number> = {
+export const PLAN_MONTHS: Record<string, number> = {
   oneMonth:    1,
   threeMonths: 3,
   sixMonths:   6,
 };
 
-const PLAN_TIER: Record<string, string> = {
+export const PLAN_TIER: Record<string, string> = {
   oneMonth:    'Starter',
   threeMonths: 'Pro',
   sixMonths:   'Premium',
 };
 
-const PLAN_LABEL: Record<string, string> = {
+export const PLAN_LABEL: Record<string, string> = {
   oneMonth:    'Starter (1 Month)',
   threeMonths: 'Pro (3 Months)',
   sixMonths:   'Premium (6 Months)',
@@ -35,7 +35,7 @@ const PLAN_LABEL: Record<string, string> = {
 // ─── Load current plan pricing from settings.json ─────────────────────────────
 const SETTINGS_FILE = path.resolve(__dirname, '../../data/settings.json');
 
-function getPlanPrice(planKey: string): number {
+export function getPlanPrice(planKey: string): number {
   try {
     if (fs.existsSync(SETTINGS_FILE)) {
       const settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
@@ -52,8 +52,8 @@ function getPlanPrice(planKey: string): number {
   return 4.99;
 }
 
-// In-memory pending payments map (paymentId → order info)
-const pendingPayments = new Map<string, {
+// In-memory pending payments map (paymentId → order info) for rapid cache
+export const pendingPayments = new Map<string, {
   userId: string;
   planKey: string;
   amount: number;
@@ -62,9 +62,33 @@ const pendingPayments = new Map<string, {
   createdAt: string;
 }>();
 
+// In-flight concurrency set to prevent duplicate concurrent webhook executions
+export const processingPayments = new Set<string>();
+
+// ─── Helpers: Signature calculation & recursive key sorting ─────────────────
+export function sortObjectKeys(obj: any): any {
+  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
+    return obj;
+  }
+  return Object.keys(obj)
+    .sort()
+    .reduce((acc: Record<string, any>, key: string) => {
+      acc[key] = sortObjectKeys(obj[key]);
+      return acc;
+    }, {});
+}
+
+export function calculateIpnSignature(payload: any, secret: string): string {
+  const sorted = sortObjectKeys(payload);
+  return crypto
+    .createHmac('sha512', secret.trim())
+    .update(JSON.stringify(sorted))
+    .digest('hex');
+}
+
 // Helper: fetch from NOWPayments API
-async function nowFetch(path: string, options: RequestInit = {}) {
-  const url = `${getNowApiBase()}${path}`;
+async function nowFetch(endpoint: string, options: RequestInit = {}) {
+  const url = `${getNowApiBase()}${endpoint}`;
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -75,14 +99,14 @@ async function nowFetch(path: string, options: RequestInit = {}) {
   });
   const data = await res.json() as any;
   if (!res.ok) {
-    throw new Error(data?.message || `NOWPayments error: ${res.status}`);
+    throw new Error(data?.message || `NOWPayments API error: ${res.status}`);
   }
   return data;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/payments/create
-// Authenticated user — creates a USDT BEP20 payment invoice
+// Authenticated user — creates a live USDT BEP20 payment invoice via NOWPayments
 // ─────────────────────────────────────────────────────────────────────────────
 export const createPayment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -93,53 +117,45 @@ export const createPayment = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const userId   = req.user?._id || req.user?.id || 'unknown';
+    const apiKey = config.nowPaymentsApiKey;
+    const hasRealApiKey = Boolean(apiKey && apiKey !== 'YOUR_NOWPAYMENTS_API_KEY_HERE' && apiKey.trim().length > 10);
+
+    if (!hasRealApiKey) {
+      res.status(503).json({
+        message: 'Payment gateway not configured. Please provide a valid NOWPAYMENTS_API_KEY in the backend environment.',
+      });
+      return;
+    }
+
+    const userId   = String(req.user?._id || req.user?.id || 'unknown');
     const amount   = getPlanPrice(planKey);
     const orderId  = `hage_${userId}_${planKey}_${Date.now()}`;
     const backendUrl  = process.env.BACKEND_URL  || 'http://localhost:5000';
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-    const apiKey = config.nowPaymentsApiKey;
-    const hasRealApiKey = Boolean(apiKey && apiKey !== 'YOUR_NOWPAYMENTS_API_KEY_HERE' && apiKey.trim().length > 10);
+    const payload = {
+      price_amount:      amount,
+      price_currency:    'usd',
+      pay_currency:      'usdtbsc',       // USDT on BNB Smart Chain (BEP20)
+      order_id:          orderId,
+      order_description: `HAGE Trading Journal — ${PLAN_LABEL[planKey]}`,
+      ipn_callback_url:  `${backendUrl}/api/payments/ipn`,
+      success_url:       `${frontendUrl}/dashboard/subscription?payment=success`,
+      cancel_url:        `${frontendUrl}/dashboard/subscription?payment=cancelled`,
+    };
 
-    let invoice: any;
+    console.log(`[PAYMENT] Creating live invoice for user ${userId}, plan: ${planKey}, amount: $${amount}, wallet: ${userWalletAddress || 'N/A'}`);
 
-    if (!hasRealApiKey) {
-      console.log(`[PAYMENT] Sandbox/Demo mode: creating mock invoice for user ${userId}, wallet: ${userWalletAddress}`);
-      invoice = {
-        payment_id: `mock_${Date.now()}`,
-        pay_address: '0x71C94623dA4f16B2771d9d96859599547d86B00f', // Standard BSC deposit address
-        pay_amount: amount,
-        pay_currency: 'usdtbsc',
-        actually_paid: 0,
-        payment_status: 'waiting',
-        expiration_estimate_date: new Date(Date.now() + 3600000).toISOString(),
-      };
-    } else {
-      const payload = {
-        price_amount:      amount,
-        price_currency:    'usd',
-        pay_currency:      'usdtbsc',       // USDT on BNB Smart Chain (BEP20)
-        order_id:          orderId,
-        order_description: `HAGE Trading Journal — ${PLAN_LABEL[planKey]}`,
-        ipn_callback_url:  `${backendUrl}/api/payments/ipn`,
-        success_url:       `${frontendUrl}/dashboard/subscription?payment=success`,
-        cancel_url:        `${frontendUrl}/dashboard/subscription?payment=cancelled`,
-      };
-
-      console.log(`[PAYMENT] Creating live invoice for user ${userId}, plan: ${planKey}, amount: $${amount}, wallet: ${userWalletAddress}`);
-
-      invoice = await nowFetch('/payment', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-    }
+    const invoice = await nowFetch('/payment', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
 
     const paymentId = String(invoice.payment_id);
 
-    // Store pending record in memory for quick lookup during polling
+    // Store pending record in memory for quick status lookup
     pendingPayments.set(paymentId, {
-      userId: String(userId),
+      userId,
       planKey,
       amount,
       userWalletAddress: userWalletAddress || '',
@@ -147,27 +163,60 @@ export const createPayment = async (req: AuthRequest, res: Response): Promise<vo
       createdAt: new Date().toISOString(),
     });
 
-    // Also persist a pending payment record to the store for durability
+    // Persist pending payment record to database store
     const store = dbManager.getStore();
     store.subscriptions = store.subscriptions.filter(
-      (s: any) => !(s.user === String(userId) && s.status === 'Pending')
+      (s: any) => !(s.user === userId && s.status === 'Pending')
     );
-    store.subscriptions.push({
+
+    const pendingRecord = {
       _id: `pay_${paymentId}`,
-      user: String(userId),
+      user: userId,
       userWalletAddress: userWalletAddress || '',
       plan: PLAN_LABEL[planKey],
       duration: planKey,
+      tier: PLAN_TIER[planKey],
       status: 'Pending',
       paymentMethod: 'Crypto',
       nowPaymentId: paymentId,
       nowOrderId: orderId,
       amount,
+      priceCurrency: 'usd',
+      payCurrency: invoice.pay_currency || 'usdtbsc',
       startDate: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    });
+    };
+
+    store.subscriptions.push(pendingRecord);
     dbManager.saveToDisk();
+
+    // Also persist pending subscription to MongoDB if connected
+    if (dbManager.getIsMongoConnected()) {
+      try {
+        const Subscription = (await import('../models/Subscription')).default;
+        await Subscription.findOneAndUpdate(
+          { nowPaymentId: paymentId },
+          {
+            user: userId,
+            plan: (PLAN_TIER[planKey] as any) || 'Starter',
+            status: 'Pending',
+            paymentMethod: 'Crypto',
+            nowPaymentId: paymentId,
+            nowOrderId: orderId,
+            amount,
+            duration: planKey,
+            priceCurrency: 'usd',
+            payCurrency: invoice.pay_currency || 'usdtbsc',
+            userWalletAddress: userWalletAddress || '',
+            startDate: new Date(),
+          },
+          { upsert: true, new: true }
+        );
+      } catch (mongoErr) {
+        console.warn('[PAYMENT] Mongo pending record sync warning:', mongoErr);
+      }
+    }
 
     res.json({
       paymentId,
@@ -183,7 +232,6 @@ export const createPayment = async (req: AuthRequest, res: Response): Promise<vo
       planLabel: PLAN_LABEL[planKey],
       usdAmount: amount,
       userWalletAddress: userWalletAddress || '',
-      isMock: !hasRealApiKey,
     });
   } catch (err: any) {
     console.error('[PAYMENT] createPayment error:', err.message);
@@ -193,7 +241,7 @@ export const createPayment = async (req: AuthRequest, res: Response): Promise<vo
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/payments/status/:paymentId
-// Authenticated user — polls payment status
+// Authenticated user — polls live payment status from NOWPayments
 // ─────────────────────────────────────────────────────────────────────────────
 export const getPaymentStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -201,26 +249,6 @@ export const getPaymentStatus = async (req: AuthRequest, res: Response): Promise
 
     if (!paymentId) {
       res.status(400).json({ message: 'paymentId is required.' });
-      return;
-    }
-
-    // Handle mock payment verification
-    if (String(paymentId).startsWith('mock_')) {
-      const pending = pendingPayments.get(String(paymentId));
-      const store = dbManager.getStore();
-      const rec = store.subscriptions.find((s: any) => s.nowPaymentId === String(paymentId));
-      const currentStatus = rec?.status === 'Active' ? 'finished' : (pending?.status || 'waiting');
-      
-      res.json({
-        paymentId,
-        paymentStatus: currentStatus,
-        payAddress: '0x71C94623dA4f16B2771d9d96859599547d86B00f',
-        payAmount: pending?.amount || 4.99,
-        payCurrency: 'usdtbsc',
-        actuallyPaid: currentStatus === 'finished' ? (pending?.amount || 4.99) : 0,
-        orderId: `hage_mock_${paymentId}`,
-        isMock: true,
-      });
       return;
     }
 
@@ -233,23 +261,28 @@ export const getPaymentStatus = async (req: AuthRequest, res: Response): Promise
 
     const data = await nowFetch(`/payment/${paymentId}`);
 
-    // If payment just confirmed and we haven't processed it yet, activate now
-    const isConfirmed = data.payment_status === 'finished' || data.payment_status === 'confirmed';
-    if (isConfirmed) {
-      const pending = pendingPayments.get(String(paymentId));
-      if (pending) {
-        await activateSubscription(pending.userId, pending.planKey, String(paymentId), data.order_id, pending.amount);
-        pendingPayments.delete(String(paymentId));
-      } else {
-        // Try to find from store
-        const store = dbManager.getStore();
-        const rec = store.subscriptions.find(
-          (s: any) => s.nowPaymentId === String(paymentId) && s.status === 'Pending'
-        );
-        if (rec) {
-          await activateSubscription(rec.user, rec.duration, String(paymentId), rec.nowOrderId, rec.amount);
-        }
-      }
+    // Update status in pending memory and DB record
+    const paymentKey = String(paymentId);
+    const pending = pendingPayments.get(paymentKey);
+    if (pending) {
+      pending.status = data.payment_status;
+    }
+
+    const store = dbManager.getStore();
+    const dbRec = store.subscriptions.find((s: any) => String(s.nowPaymentId) === paymentKey);
+    if (dbRec && dbRec.status !== 'Active') {
+      dbRec.paymentStatus = data.payment_status;
+      dbRec.actuallyPaid = data.actually_paid;
+      dbRec.updatedAt = new Date().toISOString();
+      dbManager.saveToDisk();
+    }
+
+    // Requirement 4: Activate subscriptions ONLY after a verified payment reaches finished status
+    if (data.payment_status === 'finished' && dbRec && dbRec.status !== 'Active') {
+      const planKey = dbRec.duration || pending?.planKey || 'oneMonth';
+      const amount = dbRec.amount || pending?.amount || getPlanPrice(planKey);
+      await activateSubscription(dbRec.user, planKey, paymentKey, dbRec.nowOrderId || data.order_id, amount);
+      pendingPayments.delete(paymentKey);
     }
 
     res.json({
@@ -269,124 +302,227 @@ export const getPaymentStatus = async (req: AuthRequest, res: Response): Promise
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/payments/simulate-success/:paymentId
-// For testing / demo: confirms a payment and immediately activates subscription
+// Disabled in production / live mode: fake payment confirmations are forbidden
 // ─────────────────────────────────────────────────────────────────────────────
 export const simulatePaymentSuccess = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { paymentId } = req.params;
-    const userId = req.user?._id || req.user?.id || 'unknown';
-
-    const pending = pendingPayments.get(String(paymentId));
-    const store = dbManager.getStore();
-    const rec = store.subscriptions.find((s: any) => s.nowPaymentId === String(paymentId));
-    
-    const planKey = pending?.planKey || rec?.duration || 'threeMonths';
-    const amount = pending?.amount || rec?.amount || 4.99;
-
-    await activateSubscription(String(userId), planKey, String(paymentId), `order_${paymentId}`, amount);
-
-    if (pending) {
-      pending.status = 'finished';
-    }
-
-    res.json({
-      success: true,
-      message: 'Payment verified and plan activated!',
-      planKey,
-      paymentId,
-    });
-  } catch (err: any) {
-    console.error('[PAYMENT] simulatePaymentSuccess error:', err.message);
-    res.status(500).json({ message: err.message || 'Failed to simulate payment.' });
-  }
+  res.status(403).json({
+    success: false,
+    message: 'Simulated payment confirmations are disabled. Payment activation requires verified IPN webhook confirmation.',
+  });
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/payments/ipn
-// NOWPayments IPN webhook — NO JWT auth, verified via HMAC-SHA512
+// NOWPayments IPN webhook — NO JWT auth, verified strictly via HMAC-SHA512
 // ─────────────────────────────────────────────────────────────────────────────
 export const handleIpn = async (req: Request, res: Response): Promise<void> => {
+  let paymentKey: string | null = null;
+
   try {
-    // 1. Verify HMAC-SHA512 signature
-    const receivedSig = req.headers['x-nowpayments-sig'] as string;
-    const ipnSecret   = config.nowPaymentsIpnSecret;
-
-    if (!ipnSecret || ipnSecret === 'YOUR_NOWPAYMENTS_IPN_SECRET_HERE') {
-      // IPN secret not configured — log warning and accept (dev mode)
-      console.warn('[IPN] WARNING: IPN secret not configured. Skipping signature verification.');
-    } else if (!receivedSig) {
-      console.warn('[IPN] Missing x-nowpayments-sig header — rejecting.');
-      res.status(400).json({ message: 'Missing IPN signature.' });
+    // 1. Verify HMAC-SHA512 Secret Configuration
+    const ipnSecret = config.nowPaymentsIpnSecret;
+    if (!ipnSecret || ipnSecret.trim() === '' || ipnSecret === 'YOUR_NOWPAYMENTS_IPN_SECRET_HERE') {
+      console.error('[IPN] Webhook rejected: NOWPAYMENTS_IPN_SECRET is not configured on the server.');
+      res.status(503).json({ error: 'NOWPayments IPN secret is not configured on the server.' });
       return;
-    } else {
-      // Sort keys alphabetically and compute HMAC
-      const body = req.body as Record<string, any>;
-      const sortedBody = Object.keys(body)
-        .sort()
-        .reduce((acc: Record<string, any>, key) => { acc[key] = body[key]; return acc; }, {});
+    }
 
-      const expectedSig = crypto
-        .createHmac('sha512', ipnSecret)
-        .update(JSON.stringify(sortedBody))
-        .digest('hex');
+    // 2. Verify signature header existence
+    const receivedSig = req.headers['x-nowpayments-sig'] as string | undefined;
+    if (!receivedSig || typeof receivedSig !== 'string' || !receivedSig.trim()) {
+      console.warn('[IPN] Webhook rejected: Missing x-nowpayments-sig header.');
+      res.status(400).json({ error: 'Missing x-nowpayments-sig header.' });
+      return;
+    }
 
-      if (expectedSig !== receivedSig) {
-        console.warn('[IPN] Signature mismatch — rejecting IPN.');
-        res.status(401).json({ message: 'Invalid IPN signature.' });
-        return;
+    // 3. Verify HMAC-SHA512 signature using constant-time comparison
+    let payload = req.body;
+    if (typeof payload === 'string') {
+      try {
+        payload = JSON.parse(payload);
+      } catch (_) {}
+    }
+
+    if (!payload || typeof payload !== 'object') {
+      res.status(400).json({ error: 'Invalid JSON payload received.' });
+      return;
+    }
+
+    const calculatedSig = calculateIpnSignature(payload, ipnSecret);
+    const receivedBuffer = Buffer.from(receivedSig.trim().toLowerCase(), 'hex');
+    const calculatedBuffer = Buffer.from(calculatedSig.toLowerCase(), 'hex');
+
+    if (
+      receivedBuffer.length !== calculatedBuffer.length ||
+      receivedBuffer.length === 0 ||
+      !crypto.timingSafeEqual(receivedBuffer, calculatedBuffer)
+    ) {
+      console.warn('[IPN] Webhook rejected: Invalid HMAC-SHA512 signature.');
+      res.status(401).json({ error: 'Invalid IPN signature.' });
+      return;
+    }
+
+    // 4. Extract and validate required payload fields
+    const {
+      payment_id,
+      payment_status,
+      order_id,
+      price_amount,
+      price_currency,
+      pay_currency,
+      actually_paid,
+    } = payload;
+
+    if (!payment_id || !order_id) {
+      console.warn('[IPN] Missing payment_id or order_id in IPN payload.');
+      res.status(400).json({ error: 'Missing required payment_id or order_id in IPN payload.' });
+      return;
+    }
+
+    paymentKey = String(payment_id);
+
+    // 5. Concurrency lock to prevent duplicate concurrent processing
+    if (processingPayments.has(paymentKey)) {
+      console.log(`[IPN] Payment ${paymentKey} is already being processed concurrently. Acknowledging.`);
+      res.status(200).json({ received: true, inProgress: true, message: 'Webhook currently being processed.' });
+      return;
+    }
+    processingPayments.add(paymentKey);
+
+    console.log(`[IPN] Processing webhook for payment_id=${paymentKey}, status=${payment_status}, order_id=${order_id}`);
+
+    // 6. Verify against database records (Requirement 3)
+    const store = dbManager.getStore();
+    let dbRecord = store.subscriptions.find(
+      (s: any) => String(s.nowPaymentId) === paymentKey || String(s.nowOrderId) === String(order_id)
+    );
+
+    // Check Mongo if connected
+    if (!dbRecord && dbManager.getIsMongoConnected()) {
+      try {
+        const Subscription = (await import('../models/Subscription')).default;
+        const mongoSub = await Subscription.findOne({
+          $or: [{ nowPaymentId: paymentKey }, { nowOrderId: String(order_id) }]
+        });
+        if (mongoSub) {
+          dbRecord = mongoSub.toObject();
+        }
+      } catch (mongoErr) {
+        console.warn('[IPN] Mongo lookup warning:', mongoErr);
       }
     }
 
-    const { payment_id, payment_status, order_id, price_amount } = req.body;
-
-    console.log(`[IPN] Received: payment_id=${payment_id}, status=${payment_status}, order=${order_id}`);
-
-    // 2. Only process terminal success states
-    if (payment_status !== 'finished' && payment_status !== 'confirmed') {
-      // Acknowledge intermediate states (waiting, confirming, etc.)
-      res.status(200).json({ received: true, status: payment_status });
+    if (!dbRecord) {
+      console.error(`[IPN] Database Verification Failed: No matching record found for payment_id: ${paymentKey}, order_id: ${order_id}`);
+      res.status(404).json({ error: 'Payment record not found in database.' });
       return;
     }
 
-    // 3. Parse order_id to find user and plan
-    // Format: hage_{userId}_{planKey}_{timestamp}
-    const parts = String(order_id).split('_');
-    if (parts.length < 4 || parts[0] !== 'hage') {
-      console.warn('[IPN] Could not parse order_id:', order_id);
-      res.status(200).json({ received: true }); // Still 200 to stop retries
+    // 6a. Verify payment ID
+    if (dbRecord.nowPaymentId && String(dbRecord.nowPaymentId) !== paymentKey) {
+      console.error(`[IPN] Payment ID mismatch: DB has ${dbRecord.nowPaymentId}, IPN has ${paymentKey}`);
+      res.status(400).json({ error: 'Payment ID mismatch against database record.' });
       return;
     }
 
-    const userId  = parts[1];
-    const planKey = parts[2];
-
-    // 4. Idempotency — check if already activated
-    const store = dbManager.getStore();
-    const existing = store.subscriptions.find(
-      (s: any) => s.nowPaymentId === String(payment_id) && s.status === 'Active'
-    );
-    if (existing) {
-      console.log(`[IPN] Payment ${payment_id} already activated — skipping.`);
-      res.status(200).json({ received: true, alreadyProcessed: true });
+    // 6b. Verify order ID
+    if (dbRecord.nowOrderId && String(dbRecord.nowOrderId) !== String(order_id)) {
+      console.error(`[IPN] Order ID mismatch: DB has ${dbRecord.nowOrderId}, IPN has ${order_id}`);
+      res.status(400).json({ error: 'Order ID mismatch against database record.' });
       return;
     }
 
-    // 5. Activate subscription
-    await activateSubscription(userId, planKey, String(payment_id), String(order_id), Number(price_amount));
+    // 6c. Parse order_id format (hage_{userId}_{planKey}_{timestamp})
+    const orderParts = String(order_id).split('_');
+    if (orderParts.length < 4 || orderParts[0] !== 'hage') {
+      console.error(`[IPN] Invalid order_id format: ${order_id}`);
+      res.status(400).json({ error: 'Invalid order ID format.' });
+      return;
+    }
 
-    pendingPayments.delete(String(payment_id));
+    const planKey = orderParts[orderParts.length - 2];
+    const userId  = orderParts.slice(1, orderParts.length - 2).join('_');
 
-    res.status(200).json({ received: true, activated: true });
+    if (!PLAN_MONTHS[planKey]) {
+      console.error(`[IPN] Unknown subscription planKey in order_id: ${planKey}`);
+      res.status(400).json({ error: 'Unknown subscription plan in order ID.' });
+      return;
+    }
+
+    // 6d. Verify subscription plan against database record
+    if (dbRecord.duration && dbRecord.duration !== planKey) {
+      console.error(`[IPN] Subscription plan mismatch: DB duration=${dbRecord.duration}, IPN planKey=${planKey}`);
+      res.status(400).json({ error: 'Subscription plan does not match database record.' });
+      return;
+    }
+
+    // 6e. Verify amount: price_amount against expected plan price in database
+    const receivedAmount = Number(price_amount);
+    const expectedAmount = Number(dbRecord.amount);
+    if (isNaN(receivedAmount) || receivedAmount < (expectedAmount - 0.01)) {
+      console.error(`[IPN] Amount mismatch: Expected at least $${expectedAmount}, received $${receivedAmount}`);
+      res.status(400).json({ error: `Amount mismatch: expected at least $${expectedAmount}, received $${receivedAmount}` });
+      return;
+    }
+
+    // 6f. Verify currency: price_currency must match expected currency (usd)
+    const expectedCurrency = (dbRecord.priceCurrency || 'usd').toLowerCase();
+    if (price_currency && String(price_currency).toLowerCase() !== expectedCurrency) {
+      console.error(`[IPN] Currency mismatch: Expected ${expectedCurrency}, received ${price_currency}`);
+      res.status(400).json({ error: `Currency mismatch: expected ${expectedCurrency}, received ${price_currency}` });
+      return;
+    }
+
+    // 7. Prevent duplicate webhook processing (Requirement 5)
+    if (dbRecord.status === 'Active') {
+      console.log(`[IPN] Idempotency: Payment ${paymentKey} is already active. No duplicate processing needed.`);
+      res.status(200).json({ received: true, alreadyProcessed: true, status: 'finished' });
+      return;
+    }
+
+    // 8. Requirement 4: Activate subscriptions ONLY after verified payment reaches finished status
+    if (payment_status !== 'finished') {
+      console.log(`[IPN] Payment ${paymentKey} received with non-finished status: "${payment_status}". Updating status in database.`);
+      
+      // Update intermediate status in database for user tracking
+      dbRecord.paymentStatus = payment_status;
+      dbRecord.updatedAt = new Date().toISOString();
+      dbManager.saveToDisk();
+
+      res.status(200).json({
+        received: true,
+        status: payment_status,
+        activated: false,
+        message: `Status recorded as ${payment_status}. Subscription will activate when payment reaches 'finished'.`,
+      });
+      return;
+    }
+
+    // 9. Payment verified and reached finished status: Activate subscription!
+    console.log(`[IPN] Payment ${paymentKey} VERIFIED and FINISHED! Activating subscription for user ${userId}, plan ${planKey}, amount $${expectedAmount}`);
+    await activateSubscription(userId, planKey, paymentKey, String(order_id), expectedAmount);
+
+    pendingPayments.delete(paymentKey);
+
+    res.status(200).json({
+      received: true,
+      activated: true,
+      status: 'finished',
+      message: 'Payment verified and subscription activated successfully.',
+    });
   } catch (err: any) {
-    console.error('[IPN] Error:', err.message);
-    // Always return 200 to prevent NOWPayments from hammering with retries
-    res.status(200).json({ received: true, error: 'Internal processing error' });
+    console.error('[IPN] Processing error:', err.message);
+    res.status(500).json({ received: false, error: 'Internal webhook processing error' });
+  } finally {
+    if (paymentKey) {
+      processingPayments.delete(paymentKey);
+    }
   }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/payments/my-subscription
-// Authenticated — returns the caller's current subscription record
+// Authenticated user — returns the caller's current subscription record
 // ─────────────────────────────────────────────────────────────────────────────
 export const getMySubscription = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -442,7 +578,7 @@ export const getMySubscription = async (req: AuthRequest, res: Response): Promis
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal: activate a user's subscription in dbManager + Mongo
 // ─────────────────────────────────────────────────────────────────────────────
-async function activateSubscription(
+export async function activateSubscription(
   userId: string,
   planKey: string,
   paymentId: string,
@@ -460,30 +596,48 @@ async function activateSubscription(
 
   const store = dbManager.getStore();
 
-  // Remove any existing pending or free subscriptions for this user
-  store.subscriptions = store.subscriptions.filter(
-    (s: any) => s.user !== userId || (s.status === 'Active' && s.nowPaymentId && s.nowPaymentId !== paymentId)
+  // Find existing pending record for this payment/user and update to Active
+  const existingSub = store.subscriptions.find(
+    (s: any) => String(s.nowPaymentId) === String(paymentId) || String(s.nowOrderId) === String(orderId)
   );
 
-  // Add the activated subscription record
-  store.subscriptions.push({
-    _id: `sub_${paymentId}`,
-    user: userId,
-    plan: tier,
-    planLabel: label,
-    duration: planKey,
-    status: 'Active',
-    paymentMethod: 'Crypto',
-    nowPaymentId: paymentId,
-    nowOrderId: orderId,
-    amount,
-    startDate: startDate.toISOString(),
-    endDate: endDate.toISOString(),
-    createdAt: startDate.toISOString(),
-    updatedAt: startDate.toISOString(),
-  });
+  if (existingSub) {
+    existingSub.user = userId;
+    existingSub.plan = tier;
+    existingSub.planLabel = label;
+    existingSub.duration = planKey;
+    existingSub.status = 'Active';
+    existingSub.paymentMethod = 'Crypto';
+    existingSub.nowPaymentId = paymentId;
+    existingSub.nowOrderId = orderId;
+    existingSub.amount = amount;
+    existingSub.startDate = startDate.toISOString();
+    existingSub.endDate = endDate.toISOString();
+    existingSub.updatedAt = startDate.toISOString();
+  } else {
+    // Remove previous non-active records for this user and insert new Active record
+    store.subscriptions = store.subscriptions.filter(
+      (s: any) => s.user !== userId || s.status === 'Active'
+    );
+    store.subscriptions.push({
+      _id: `sub_${paymentId}`,
+      user: userId,
+      plan: tier,
+      planLabel: label,
+      duration: planKey,
+      status: 'Active',
+      paymentMethod: 'Crypto',
+      nowPaymentId: paymentId,
+      nowOrderId: orderId,
+      amount,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      createdAt: startDate.toISOString(),
+      updatedAt: startDate.toISOString(),
+    });
+  }
 
-  // Update user record with subscription info
+  // Update user profile record with active subscription info
   const user = store.users.find((u: any) => String(u._id) === String(userId));
   if (user) {
     user.subscriptionTier      = tier;
@@ -497,19 +651,25 @@ async function activateSubscription(
 
   dbManager.saveToDisk();
 
-  // Also update Mongo if connected
+  // Also synchronize to MongoDB if connected
   try {
-    const Subscription = (await import('../models/Subscription')).default;
-    const User         = (await import('../models/User')).default;
-
     if (dbManager.getIsMongoConnected()) {
+      const Subscription = (await import('../models/Subscription')).default;
+      const User         = (await import('../models/User')).default;
+
       await Subscription.findOneAndUpdate(
-        { user: userId },
+        { $or: [{ nowPaymentId: paymentId }, { user: userId }] },
         {
           user: userId,
           plan: tier as any,
           status: 'Active',
-          paymentMethod: 'Crypto' as any,
+          paymentMethod: 'Crypto',
+          nowPaymentId: paymentId,
+          nowOrderId: orderId,
+          amount,
+          duration: planKey,
+          priceCurrency: 'usd',
+          payCurrency: 'usdtbsc',
           startDate,
           endDate,
         },
@@ -525,3 +685,4 @@ async function activateSubscription(
     console.warn('[PAYMENT] Mongo subscription update warning:', e);
   }
 }
+

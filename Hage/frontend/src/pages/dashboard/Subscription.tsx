@@ -17,6 +17,13 @@ import { loadPlanPricing, fetchRemotePricing } from '../../store/pricingStore';
 import { CryptoPaymentModal } from '../../components/ui/CryptoPaymentModal';
 import { refreshSubscriptionFromBackend } from '../../services/paymentService';
 
+// ── Color tokens ──────────────────────────────────────────────────────────────
+const NAVY = '#0E235C';
+const NAVY_HOVER = '#091A44';
+const NAVY_FAINT = 'rgba(14, 35, 92, 0.07)';
+const NAVY_BORDER = 'rgba(14, 35, 92, 0.22)';
+const BLUE_ACCENT = '#1D4ED8';
+
 const DEFAULT_PRICING = { oneMonth: 2.99, threeMonths: 4.99, sixMonths: 9.99 };
 
 const PLANS = [
@@ -27,11 +34,6 @@ const PLANS = [
     duration: '1 Month',
     hint: 'Entry level',
     badge: null,
-    accountsLimit: '2 Accounts',
-    gradient: 'from-sky-500/10 to-cyan-500/5',
-    border: 'border-sky-500/30',
-    activeBorder: 'border-blue-500',
-    badgeBg: '',
     months: 1,
     features: [
       '2 Trading Accounts',
@@ -47,11 +49,6 @@ const PLANS = [
     duration: '3 Months',
     hint: 'Most Popular',
     badge: '🔥 Popular',
-    accountsLimit: '10 Accounts',
-    gradient: 'from-indigo-500/15 to-violet-500/10',
-    border: 'border-indigo-500/40',
-    activeBorder: 'border-blue-500',
-    badgeBg: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
     months: 3,
     features: [
       '10 Trading Accounts',
@@ -67,11 +64,6 @@ const PLANS = [
     duration: '6 Months',
     hint: 'Best Value',
     badge: '⭐ Best Deal',
-    accountsLimit: 'Unlimited Accounts',
-    gradient: 'from-violet-500/15 to-purple-500/10',
-    border: 'border-violet-500/40',
-    activeBorder: 'border-blue-500',
-    badgeBg: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
     months: 6,
     features: [
       'Unlimited Trading Accounts',
@@ -93,7 +85,7 @@ export default function Subscription() {
   const [subscribing, setSubscribing] = useState(false);
   const [subscribeSuccess, setSubscribeSuccess] = useState(false);
   const [showCryptoModal, setShowCryptoModal] = useState(false);
-  const [activeDuration, setActiveDuration] = useState<string | null>(null); // e.g. 'oneMonth'
+  const [activeDuration, setActiveDuration] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatusInfo>(() => getSubscriptionStatus());
 
   const syncStatus = () => {
@@ -115,13 +107,11 @@ export default function Subscription() {
   };
 
   useEffect(() => {
-    // Check URL param e.g. ?plan=premium or ?plan=starter
     const requested = (searchParams.get('plan') || '').toLowerCase();
     if (requested.includes('prem')) setSelectedPlan('sixMonths');
     else if (requested.includes('start')) setSelectedPlan('oneMonth');
     else if (requested.includes('pro')) setSelectedPlan('threeMonths');
 
-    // Load admin-set pricing from pricingStore
     try {
       const planPrices = loadPlanPricing();
       if (planPrices) {
@@ -163,7 +153,6 @@ export default function Subscription() {
   const selectedPrice = pricing[selectedPlan];
   const pricePerMonth = (selectedPrice / selectedMeta.months).toFixed(2);
 
-  // Plan order for upgrade/downgrade comparison
   const PLAN_ORDER: Record<string, number> = { oneMonth: 1, threeMonths: 2, sixMonths: 3 };
   const currentPlanOrder = PLAN_ORDER[activeDuration || ''] ?? 0;
   const selectedPlanOrder = PLAN_ORDER[selectedPlan];
@@ -171,7 +160,6 @@ export default function Subscription() {
   const isDowngrade = isActive && selectedPlanOrder < currentPlanOrder;
   const isSamePlan = isActive && selectedPlanOrder === currentPlanOrder;
 
-  // Price difference for upgrade (new price - already paid price)
   const pricePaid = activeDuration ? pricing[activeDuration as keyof typeof pricing] : 0;
   const upgradePrice = Math.max(0, selectedPrice - pricePaid).toFixed(2);
 
@@ -183,7 +171,7 @@ export default function Subscription() {
   };
 
   const handleSubscribe = () => {
-    if (isDowngrade) return; // blocked
+    if (isDowngrade) return;
     setShowCryptoModal(true);
   };
 
@@ -193,13 +181,11 @@ export default function Subscription() {
     const expiry = new Date();
     expiry.setMonth(expiry.getMonth() + plan.months);
 
-    // Fix: map plan durations correctly to tier names
     const targetTier =
       plan.key === 'sixMonths'   ? 'Premium' :
       plan.key === 'threeMonths' ? 'Pro'     :
-      'Starter';  // oneMonth → Starter (NOT Free)
+      'Starter';
 
-    // 1. Optimistically set plan locally
     setUserPlan(targetTier);
 
     const subData = {
@@ -215,7 +201,6 @@ export default function Subscription() {
     setSubscriptionExpired(false);
     localStorage.removeItem('hage_subscription_expired');
 
-    // 2. Fetch authoritative plan from backend and sync localStorage
     const token = localStorage.getItem('token') || '';
     if (token) {
       await refreshSubscriptionFromBackend(token);
@@ -253,18 +238,18 @@ export default function Subscription() {
       >
         {/* Header */}
         <div className="text-center space-y-2 pt-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-2">
+          <div
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold mb-2 shadow-xs bg-[#0E235C]/10 dark:bg-blue-950/70 border border-[#0E235C]/20 dark:border-blue-800/60 text-[#0E235C] dark:text-blue-300"
+          >
             <Sparkles className="w-3.5 h-3.5" />
             HAGE Pro Access
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
             Unlock the Full Platform
           </h1>
-          <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto text-sm">
+          <p className="max-w-md mx-auto text-sm text-slate-600 dark:text-slate-400">
             One affordable plan. Full access to every feature. Cancel anytime.
           </p>
-
-
         </div>
 
         {/* Onboarding Welcome / Must Purchase First Banner */}
@@ -272,23 +257,27 @@ export default function Subscription() {
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-600/15 via-indigo-600/15 to-purple-600/15 border-2 border-indigo-500/40 shadow-xl shadow-indigo-500/5 text-center sm:text-left flex flex-col sm:flex-row items-center gap-4 sm:gap-5"
+            className="p-5 sm:p-6 rounded-2xl text-center sm:text-left flex flex-col sm:flex-row items-center gap-4 sm:gap-5 bg-white dark:bg-[#0E131F] border-2 border-[#0E235C]/25 dark:border-blue-500/30 shadow-lg shadow-[#0E235C]/5 dark:shadow-blue-900/20"
           >
-            <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30">
+            <div
+              className="w-13 h-13 rounded-2xl flex items-center justify-center shrink-0 bg-[#0E235C] text-white shadow-md shadow-[#0E235C]/30"
+            >
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <div className="space-y-1 flex-1">
+            <div className="space-y-1.5 flex-1">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+                <span
+                  className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#0E235C]/10 dark:bg-blue-950/80 text-[#0E235C] dark:text-blue-300 border border-[#0E235C]/25 dark:border-blue-800/60"
+                >
                   Step 2 of 2: Subscription Required
                 </span>
-                <span className="text-xs text-gray-400 font-bold">•</span>
-                <span className="text-xs font-bold text-gray-600 dark:text-slate-300">Account Registered</span>
+                <span className="text-xs font-bold text-[#0E235C] dark:text-blue-400">•</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Account Registered</span>
               </div>
-              <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                 Choose a Plan to Activate Your Trading Dashboard
               </h2>
-              <p className="text-xs text-gray-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+              <p className="text-xs leading-relaxed max-w-2xl text-slate-600 dark:text-slate-400">
                 Welcome to HAGE! Your account has been created. To unlock your trading accounts, challenge tracking, journal, and live analytics, please purchase a subscription plan below.
               </p>
             </div>
@@ -300,30 +289,34 @@ export default function Subscription() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-5 rounded-2xl bg-amber-500/10 dark:bg-amber-950/40 border-2 border-amber-500/40 dark:border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-amber-500/5"
+            className="p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#0E131F] border-2 border-[#0E235C]/20 dark:border-blue-500/30 shadow-md"
           >
             <div className="flex items-start gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
-                <Lock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-[#0E235C]/10 dark:bg-blue-950/60 border border-[#0E235C]/20 dark:border-blue-800/60"
+              >
+                <Lock className="w-5 h-5 text-[#0E235C] dark:text-blue-400" />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <p className="font-extrabold text-amber-900 dark:text-amber-200 text-sm sm:text-base">
-                    Your 1-Month Subscription has Ended
+                  <p className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
+                    Your Subscription has Ended
                   </p>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+                  <span
+                    className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-[#0E235C]/10 dark:bg-blue-950/70 text-[#0E235C] dark:text-blue-300 border border-[#0E235C]/20 dark:border-blue-800/60"
+                  >
                     Read-Only Mode
                   </span>
                 </div>
-                <p className="text-xs text-amber-800/90 dark:text-amber-200/80 leading-relaxed max-w-2xl">
-                  Your subscription month has ended. Your dashboard has been switched to <strong>Read-Only Mode</strong>. You can view all your charts, historical trade logs, analytics, and certificates, but management actions (adding trades, connecting accounts, requesting payouts) are locked. Renew your plan below to restore full dashboard management.
+                <p className="text-xs leading-relaxed max-w-2xl text-slate-600 dark:text-slate-400">
+                  Your subscription has ended. Your dashboard has been switched to <strong className="text-slate-900 dark:text-white">Read-Only Mode</strong>. You can view all your charts, historical trade logs, analytics, and certificates, but management actions are locked. Renew your plan below to restore full dashboard management.
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={handleToggleSimulation}
-                className="text-xs font-bold px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 dark:text-amber-200 border border-amber-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Reset Simulation</span>
@@ -337,22 +330,24 @@ export default function Subscription() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            className="p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0E131F] border border-blue-200 dark:border-blue-800/60 shadow-sm"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60"
+              >
+                <CheckCircle2 className="w-5 h-5 text-[#0E235C] dark:text-blue-400" />
               </div>
               <div>
-                <p className="font-bold text-emerald-400 text-sm">Subscription Active — {activePlan}</p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-500">
+                <p className="font-bold text-sm text-[#0E235C] dark:text-blue-300">Subscription Active — {activePlan}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Expires: {activeExpiry ? new Date(activeExpiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
                 </p>
               </div>
             </div>
             <button
               onClick={handleCancel}
-              className="text-xs font-semibold text-rose-400 hover:text-rose-300 px-3 py-1.5 rounded-lg border border-rose-500/20 hover:border-rose-500/40 transition-all cursor-pointer"
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-300"
             >
               Cancel Subscription
             </button>
@@ -363,10 +358,10 @@ export default function Subscription() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center"
+            className="p-4 rounded-2xl text-center bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800"
           >
-            <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-            <p className="font-bold text-emerald-400">
+            <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-[#0E235C] dark:text-blue-400" />
+            <p className="font-bold text-[#0E235C] dark:text-blue-200">
               {isActive ? 'Plan upgraded! 🎉 Your new access is now active.' : "You're subscribed! 🎉 Full access is now active."}
             </p>
           </motion.div>
@@ -375,7 +370,9 @@ export default function Subscription() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Plan Selection */}
           <div className="lg:col-span-2 space-y-4">
-            <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Choose Your Duration</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              Choose Your Duration
+            </p>
             <div className="grid sm:grid-cols-3 gap-4">
               {PLANS.map((plan, i) => {
                 const price = pricing[plan.key];
@@ -388,54 +385,60 @@ export default function Subscription() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08 }}
                     onClick={() => setSelectedPlan(plan.key)}
-                    className={`relative flex flex-col p-6 rounded-2xl border-2 transition-all cursor-pointer ${
+                    className={`relative flex flex-col p-6 rounded-2xl cursor-pointer transition-all duration-200 bg-white dark:bg-[#0E131F] ${
                       isSelected
-                        ? 'border-blue-500 dark:border-blue-500 bg-white dark:bg-[#0d131f] shadow-xl shadow-blue-500/10 ring-2 ring-blue-500/20'
-                        : 'border-gray-200 dark:border-slate-800 bg-white dark:bg-[#0d131f]/70 hover:border-blue-500/40 dark:hover:border-slate-700'
+                        ? 'border-2 border-[#0E235C] dark:border-blue-500 shadow-xl shadow-[#0E235C]/10 dark:shadow-blue-500/15 ring-2 ring-[#0E235C]/10 dark:ring-blue-500/25'
+                        : 'border border-slate-200 dark:border-slate-800 hover:border-[#0E235C]/40 dark:hover:border-blue-500/50 shadow-xs hover:shadow-md'
                     }`}
                   >
                     {plan.badge && (
-                      <span className={`absolute -top-3 left-4 text-[11px] font-black px-2.5 py-0.5 rounded-full border shadow-sm ${plan.badgeBg}`}>
+                      <span
+                        className="absolute -top-3 left-4 text-[11px] font-black px-3 py-1 rounded-full bg-[#0E235C] text-white shadow-md shadow-[#0E235C]/30 flex items-center gap-1"
+                      >
                         {plan.badge}
                       </span>
                     )}
 
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                         {plan.planName}
                       </h3>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-                          <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+                        <div
+                          className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-[#0E235C] text-white shadow-xs"
+                        >
+                          <Check className="w-3.5 h-3.5 text-white" />
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-baseline gap-1 my-3">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">
+                      <span className={`text-3xl sm:text-4xl font-extrabold ${isSelected ? 'text-[#0E235C] dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
                         ${price.toFixed(2)}
                       </span>
-                      <span className="text-gray-500 dark:text-slate-400 text-sm">
-                        {plan.months === 1 ? '/mo' : `total`}
+                      <span className="text-sm text-slate-500 dark:text-slate-400">
+                        {plan.months === 1 ? '/mo' : 'total'}
                       </span>
                     </div>
 
                     {plan.months > 1 && (
-                      <p className="text-xs text-blue-500 dark:text-blue-400 font-semibold -mt-2 mb-4">
+                      <p className="text-xs font-semibold -mt-2 mb-4 text-[#0E235C] dark:text-blue-400">
                         ≈ ${ppm}/mo ({plan.duration})
                       </p>
                     )}
 
                     <ul className="space-y-3.5 my-5 flex-grow">
                       {plan.features.map((feat, idx) => (
-                        <li key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm text-gray-600 dark:text-slate-300 font-medium">
-                          <CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
+                        <li key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
+                          <CheckCircle2 className="w-4 h-4 shrink-0 text-[#0E235C] dark:text-blue-400" />
                           <span>{feat}</span>
                         </li>
                       ))}
                     </ul>
 
-                    <div className="mt-auto pt-3 border-t border-gray-100 dark:border-slate-800/80">
+                    <div
+                      className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800"
+                    >
                       <button
                         type="button"
                         onClick={(e) => {
@@ -444,13 +447,13 @@ export default function Subscription() {
                         }}
                         className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
                           isSelected
-                            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 border-2 border-blue-600'
-                            : 'border-2 border-blue-500 text-blue-500 dark:text-blue-400 hover:bg-blue-500/10 bg-transparent'
+                            ? 'bg-[#0E235C] hover:bg-[#091A44] text-white shadow-md shadow-[#0E235C]/25'
+                            : 'bg-transparent text-[#0E235C] dark:text-blue-400 border-2 border-[#0E235C] dark:border-blue-500 hover:bg-[#0E235C] hover:text-white dark:hover:bg-blue-600 dark:hover:text-white'
                         }`}
                       >
                         {isSelected ? (
                           <>
-                            <Check className="w-4 h-4" />
+                            <Check className="w-4 h-4 text-white" />
                             {plan.planName} Selected
                           </>
                         ) : (
@@ -462,39 +465,50 @@ export default function Subscription() {
                 );
               })}
             </div>
-
           </div>
 
           {/* Order Summary */}
           <div className="space-y-4">
-            <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Order Summary</p>
-            <div className="rounded-2xl bg-gray-50 dark:bg-[#111722] border border-gray-200 dark:border-[#1E293B] p-5 space-y-4 sticky top-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-[#1E293B]">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              Order Summary
+            </p>
+            <div
+              className="rounded-2xl p-5 space-y-4 sticky top-6 bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-slate-800 shadow-lg shadow-black/5"
+            >
+              <div
+                className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800"
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#0E235C]/10 dark:bg-blue-950/60 border border-[#0E235C]/20 dark:border-blue-800/60"
+                >
+                  <CreditCard className="w-5 h-5 text-[#0E235C] dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 dark:text-white text-sm">HAGE Pro</p>
-                  <p className="text-[11px] text-gray-500 dark:text-slate-400">{selectedMeta.label} subscription</p>
+                  <p className="font-bold text-sm text-slate-900 dark:text-white">HAGE Pro</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{selectedMeta.label} subscription</p>
                 </div>
               </div>
 
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-slate-400">Duration</span>
-                  <span className="font-bold text-gray-900 dark:text-white">{selectedMeta.label}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Duration</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{selectedMeta.label}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-slate-400">Price / month</span>
-                  <span className="font-semibold text-gray-700 dark:text-slate-300">${pricePerMonth}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Price / month</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">${pricePerMonth}</span>
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-[#1E293B]">
-                  <span className="font-bold text-gray-900 dark:text-white">Total Due</span>
-                  <span className="text-xl font-black text-indigo-600 dark:text-indigo-400">${selectedPrice.toFixed(2)}</span>
+                <div
+                  className="flex justify-between items-center pt-2.5 border-t border-slate-100 dark:border-slate-800"
+                >
+                  <span className="font-bold text-slate-900 dark:text-white">Total Due</span>
+                  <span className="text-2xl font-black text-[#0E235C] dark:text-blue-400">${selectedPrice.toFixed(2)}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-[11px] text-amber-700 dark:text-amber-400">
+              <div
+                className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-[#0E235C] dark:text-blue-300 font-medium"
+              >
                 <Clock className="w-3.5 h-3.5 shrink-0" />
                 <span>Access expires {selectedMeta.months} month{selectedMeta.months > 1 ? 's' : ''} after purchase</span>
               </div>
@@ -504,7 +518,7 @@ export default function Subscription() {
                 <motion.div
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-[11px] text-indigo-400"
+                  className="flex items-start gap-2 p-3 rounded-xl text-[11px] bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-[#0E235C] dark:text-blue-300"
                 >
                   <ArrowUp className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <div>
@@ -519,11 +533,11 @@ export default function Subscription() {
                 <motion.div
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-400"
+                  className="flex items-start gap-2 p-3 rounded-xl text-[11px] bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
                 >
                   <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-bold mb-0.5">Downgrade not available</p>
+                    <p className="font-bold mb-0.5 text-slate-900 dark:text-white">Downgrade not available</p>
                     <p>You're currently on a higher plan. Cancel your subscription first to switch to a lower plan.</p>
                   </div>
                 </motion.div>
@@ -532,19 +546,13 @@ export default function Subscription() {
               <button
                 onClick={handleSubscribe}
                 disabled={subscribing || isSamePlan || isDowngrade}
-                className={`w-full py-3 rounded-xl text-sm font-black flex items-center justify-center gap-2 transition-all ${
-                  isSamePlan
-                    ? 'bg-gray-200 dark:bg-slate-800 text-gray-400 cursor-not-allowed'
-                    : isDowngrade
-                    ? 'bg-gray-200 dark:bg-slate-800 text-gray-400 cursor-not-allowed'
-                    : isUpgrade
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-500/25 active:scale-95 cursor-pointer'
-                    : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 active:scale-95 cursor-pointer'
-                }`}
+                className="w-full py-3.5 rounded-xl text-sm font-black flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] bg-[#0E235C] hover:bg-[#091A44] disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed text-white shadow-lg shadow-[#0E235C]/25 disabled:shadow-none"
               >
                 {subscribing ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div
+                      className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                    />
                     Processing...
                   </>
                 ) : isSamePlan ? (
@@ -575,7 +583,7 @@ export default function Subscription() {
                 )}
               </button>
 
-              <p className="text-[10px] text-center text-gray-400 dark:text-slate-500">
+              <p className="text-[10px] text-center text-slate-400 dark:text-slate-500">
                 No auto-renewal. One-time payment. Cancel anytime.
               </p>
             </div>

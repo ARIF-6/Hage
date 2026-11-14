@@ -12,7 +12,7 @@ export function HeroDashboardPreview() {
   const [isZoomed, setIsZoomed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const isDark = resolvedTheme === 'dark';
+  const isDark = resolvedTheme !== 'light';
 
   // Smooth 3D tilt effect on mouse move
   const mouseX = useMotionValue(0);
@@ -121,13 +121,13 @@ export function HeroDashboardPreview() {
           transition={{ type: "spring", damping: 20, stiffness: 100 }}
           className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 border ${
             isDark 
-              ? 'bg-[#0B0F19] border-slate-700/60 shadow-[0_20px_70px_-15px_rgba(0,0,0,0.85)] ring-1 ring-white/10' 
+              ? 'bg-[#0E235C] border-slate-700/60 shadow-[0_20px_70px_-15px_rgba(0,0,0,0.85)] ring-1 ring-white/10' 
               : 'bg-white border-gray-200/90 shadow-[0_20px_70px_-15px_rgba(59,130,246,0.18)] ring-1 ring-black/5'
           }`}
         >
           {/* Window Chrome Titlebar */}
           <div className={`px-4 py-3 flex items-center justify-between border-b select-none transition-colors duration-500 ${
-            isDark ? 'bg-[#0E1322] border-slate-800' : 'bg-gray-100/90 border-gray-200'
+            isDark ? 'bg-[#0B1B47] border-slate-800' : 'bg-gray-100/90 border-gray-200'
           }`}>
             {/* macOS Window Controls */}
             <div className="flex items-center gap-2">
@@ -142,7 +142,7 @@ export function HeroDashboardPreview() {
             {/* Address / Status Bar */}
             <div className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
               isDark 
-                ? 'bg-[#141A2B] border-slate-800 text-slate-300' 
+                ? 'bg-[#0E235C] border-slate-800 text-slate-300' 
                 : 'bg-white border-gray-200 text-gray-600 shadow-xs'
             }`}>
               <Lock className="w-3 h-3 text-emerald-500" />
@@ -194,16 +194,19 @@ export function HeroDashboardPreview() {
           </div>
 
           {/* ── Visual Screenshot Display with Silky Crossfade ── */}
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-950">
+          <div 
+            onClick={() => setIsZoomed(true)}
+            className="relative aspect-[16/9] w-full overflow-hidden bg-[#0A1227] cursor-pointer group select-none"
+          >
             {/* Dark Mode Screenshot */}
             <img
               src="/hero-dashboard-dark.png"
               alt="HAGE Trading Journal - Dark Mode Dashboard"
-              className={`absolute inset-0 w-full h-full object-cover object-top transition-all duration-700 ease-in-out ${
+              className={`absolute inset-0 w-full h-full object-cover object-top transition-all duration-500 ease-in-out z-10 ${
                 isDark 
                   ? 'opacity-100 scale-100 pointer-events-auto filter-none' 
-                  : 'opacity-0 scale-[1.02] pointer-events-none'
-              }`}
+                  : 'opacity-0 scale-[1.01] pointer-events-none'
+              } group-hover:scale-[1.01]`}
               loading="eager"
             />
 
@@ -211,33 +214,29 @@ export function HeroDashboardPreview() {
             <img
               src="/hero-dashboard-light.png"
               alt="HAGE Trading Journal - Light Mode Dashboard"
-              className={`absolute inset-0 w-full h-full object-cover object-top transition-all duration-700 ease-in-out ${
+              className={`absolute inset-0 w-full h-full object-cover object-top transition-all duration-500 ease-in-out z-10 ${
                 !isDark 
                   ? 'opacity-100 scale-100 pointer-events-auto filter-none' 
-                  : 'opacity-0 scale-[1.02] pointer-events-none'
-              }`}
+                  : 'opacity-0 scale-[1.01] pointer-events-none'
+              } group-hover:scale-[1.01]`}
               loading="eager"
             />
 
-            {/* Subtle Gradient Vignette for Depth */}
-            <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${
-              isDark 
-                ? 'bg-gradient-to-t from-[#0B0F19]/40 via-transparent to-transparent' 
-                : 'bg-gradient-to-t from-gray-200/20 via-transparent to-transparent'
-            }`} />
-
             {/* Floating Hover Indicator Hint */}
-            <div className="absolute bottom-3 right-3 z-10">
+            <div className="absolute bottom-3 right-3 z-20">
               <button 
                 type="button"
-                onClick={() => setIsZoomed(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsZoomed(true);
+                }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold backdrop-blur-md transition-all shadow-lg cursor-pointer ${
                   isDark 
-                    ? 'bg-[#0E1322]/80 text-slate-200 hover:bg-blue-600 hover:text-white border border-slate-700' 
-                    : 'bg-white/85 text-gray-800 hover:bg-blue-600 hover:text-white border border-gray-300'
+                    ? 'bg-[#0E235C]/90 text-white hover:bg-[#EBA546] hover:text-[#0E235C] border border-[#EBA546]/40' 
+                    : 'bg-white/90 text-[#0E235C] hover:bg-[#EBA546] hover:text-[#0E235C] border border-gray-300'
                 }`}
               >
-                <Maximize2 className="w-3 h-3" />
+                <Maximize2 className="w-3 h-3 text-[#EBA546] group-hover:text-[#0E235C]" />
                 <span>Click to Expand</span>
               </button>
             </div>

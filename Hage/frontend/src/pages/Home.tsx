@@ -62,7 +62,7 @@ export default function Home() {
             className="w-full h-full object-cover object-top opacity-20 dark:opacity-0 blur-3xl scale-110 transition-opacity duration-700 absolute inset-0" 
           />
           {/* Ambient gradient overlay to seamlessly blend with page */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white dark:via-[#0B0E14]/85 dark:to-[#0B0E14]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white dark:via-[#0E235C]/85 dark:to-[#0E235C]" />
         </div>
 
         {/* Dynamic Glowing Ambient Light Orbs */}
@@ -137,7 +137,7 @@ export default function Home() {
       </section>
 
       {/* FEATURES SECTION */}
-      <section id="features" className="py-24 bg-white dark:bg-[#0B0E14] transition-colors">
+      <section id="features" className="py-24 bg-white dark:bg-[#0E235C] transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-sm font-semibold text-primary dark:text-blue-400 uppercase tracking-wider mb-2">Everything you need</h2>
@@ -177,7 +177,7 @@ export default function Home() {
       </section>
 
       {/* WHY HAGE */}
-      <section className="py-24 bg-gray-50 dark:bg-[#111722]/50 transition-colors">
+      <section className="py-24 bg-gray-50 dark:bg-[#0E235C] transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div 
@@ -231,7 +231,7 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-24 bg-white dark:bg-[#0B0E14] transition-colors">
+      <section id="pricing" className="py-24 bg-white dark:bg-[#0E235C] transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -319,7 +319,7 @@ export default function Home() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-24 bg-gray-50 dark:bg-[#111722]/50 transition-colors">
+      <section className="py-24 bg-gray-50 dark:bg-[#0E235C] transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-16">
             Loved by professional traders
@@ -349,7 +349,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-24 bg-white dark:bg-[#0B0E14] transition-colors">
+      <section id="faq" className="py-24 bg-white dark:bg-[#0E235C] transition-colors">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-12 text-center">
             Frequently Asked Questions

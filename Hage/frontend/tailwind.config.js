@@ -8,20 +8,31 @@ export default {
   theme: {
     extend: {
       colors: {
+        navy: {
+          DEFAULT: '#0E235C',
+          dark: '#0E235C',
+          light: '#0E235C',
+        },
+        gold: {
+          DEFAULT: '#EBA546',
+          dark: '#EBA546',
+          light: '#EBA546',
+        },
+        white: '#FFFFFF',
         primary: {
-          DEFAULT: '#2563EB', // Brand Blue
-          light: '#3B82F6',
-          dark: '#1D4ED8',
+          DEFAULT: '#EBA546',
+          light: '#EBA546',
+          dark: '#0E235C',
         },
         secondary: {
-          DEFAULT: '#F8FAFC',
+          DEFAULT: '#0E235C',
         }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+        'soft': '0 4px 20px -2px rgba(235, 165, 70, 0.2)',
       }
     },
   },

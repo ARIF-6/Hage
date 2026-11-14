@@ -35,11 +35,11 @@ export interface PlanRules {
 export const PLAN_RULES: Record<PlanType, PlanRules> = {
   Free: {
     name: 'Free',
-    // Unpaid / new registrations: 0 accounts, all trading locked until fee is paid
-    maxAccounts: 0,
-    maxTradesPerMonth: 0,
-    hasChallengeTracking: false,
-    hasAdvancedAnalytics: false,
+    // Free Tier: 1 Trading Account, 50 trades/month, full dashboard access
+    maxAccounts: 1,
+    maxTradesPerMonth: 50,
+    hasChallengeTracking: true,
+    hasAdvancedAnalytics: true,
     hasAiAnalysis: false,
     hasMt5Integration: false,
   },
@@ -133,13 +133,13 @@ export function getSubscriptionStatus(): SubscriptionStatusInfo {
       };
     }
 
-    if (profileSubStatus === 'active' && (isPaidTier || isExplicitAdminGrant)) {
+    if (profileSubStatus === 'active' && (isPaidTier || isExplicitAdminGrant || profilePlan === 'Free' || profilePlan === 'Free Tier')) {
       return {
         isSubscribed: true,
         isActive: true,
         isExpired: false,
         isReadOnly: false,
-        planName: profilePlan,
+        planName: profilePlan === 'Free' ? 'Free Tier' : profilePlan,
         expiryDate: null,
         daysRemaining: 365
       };
@@ -295,6 +295,16 @@ export function hasUserPurchasedPlan(): boolean {
       return true;
     }
 
+    const currentStatus = (localStorage.getItem('user_subscription_status') || localStorage.getItem('profile_status') || '').toLowerCase();
+    if (currentStatus === 'expired') {
+      return true; // Read-only dashboard access
+    }
+
+    // If an admin explicitly granted access, user has full access
+    if (isAdminGrantedAccess()) {
+      return true;
+    }
+
     // 1. Check saved subscription status payload (from Crypto payment or live backend sync)
     const subRaw = localStorage.getItem('hage_subscription_status');
     if (subRaw) {
@@ -302,10 +312,11 @@ export function hasUserPurchasedPlan(): boolean {
       if (parsed) {
         const plan = (parsed.plan || '').toLowerCase();
         const duration = (parsed.duration || '').toLowerCase();
-        // ONLY genuine paid plans count as purchased
+        // Paid plans or active free tier
         const isPaidTier =
           plan.includes('starter') || plan.includes('pro') || plan.includes('premium') ||
           duration === 'onemonth' || duration === 'threemonths' || duration === 'sixmonths';
+        const isFreeTier = plan.includes('free');
 
         const method = (parsed.paymentMethod || '').toLowerCase();
         const isGrantedMethod =
@@ -318,26 +329,33 @@ export function hasUserPurchasedPlan(): boolean {
         const expiryTime = hasExpiry ? new Date(parsed.expiry).getTime() : null;
         const isPastExpiry = expiryTime !== null && expiryTime <= Date.now();
 
-        if (parsed.active && !isPastExpiry && isPaidTier && (isGrantedMethod || isPaidTier)) {
-          return true;
+        if (parsed.active && !isPastExpiry) {
+          if (isPaidTier && (isGrantedMethod || isPaidTier)) {
+            return true;
+          }
+          if (isFreeTier && (isGrantedMethod || parsed.status === 'Active' || currentStatus === 'active')) {
+            return true;
+          }
+          if (isGrantedMethod) {
+            return true;
+          }
         }
       }
     }
 
     // 2. Direct tier override in storage from backend sync
     const tier = localStorage.getItem(PLAN_STORAGE_KEY) || localStorage.getItem('profile_plan') || '';
-    const status = (localStorage.getItem('user_subscription_status') || localStorage.getItem('profile_status') || '').toLowerCase();
     const paymentMethod = (localStorage.getItem('profile_paymentMethod') || '').toLowerCase();
 
-    if (status === 'active') {
-      // ONLY Starter, Pro, or Premium tiers count as purchased
+    if (currentStatus === 'active') {
       const isPaidTier = tier === 'Starter' || tier === 'Pro' || tier === 'Premium';
+      const isFreeTier = tier === 'Free' || tier === 'Free Tier';
       const isGrantedMethod =
         paymentMethod.includes('manual admin') ||
         paymentMethod.includes('active access') ||
         paymentMethod.includes('crypto');
 
-      if (isPaidTier && isGrantedMethod) {
+      if (isPaidTier || isFreeTier || isGrantedMethod) {
         return true;
       }
     }
