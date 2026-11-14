@@ -115,7 +115,7 @@ export default function Login() {
 
       const matchedUser = localUsers.find(u => u.email?.toLowerCase().trim() === cleanEmail);
       if (!matchedUser) {
-        setError('No account found with this email address. Please check your spelling or sign up.');
+        setError('Cannot connect to authentication server. Please check your connection or ensure backend is running.');
         setSubmitting(false);
         return;
       }

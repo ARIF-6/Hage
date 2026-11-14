@@ -1,23 +1,19 @@
-// Centralized API configuration for HAGE Trading Journal
-
-const CLOUDFLARE_BACKEND_URL = 'https://hage-backend.mohameddhuux6.workers.dev/api';
-
 export const getApiBaseUrl = (): string => {
-  // 1. Explicit Vite environment variable (set in Cloudflare Pages / Vercel / .env)
+  // 1. Explicit Vite environment variable (set in Cloudflare / .env)
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
 
-  // 2. Custom backend override saved in localStorage (useful for instant mobile testing)
+  // 2. Custom backend override saved in localStorage (allows instant tunnel / cloud connection)
   if (typeof window !== 'undefined') {
     const savedBackend = localStorage.getItem('hage_custom_api_url');
     if (savedBackend) {
       return savedBackend.replace(/\/+$/, '');
     }
 
-    // 3. If deployed on cloud domain, point to the Cloudflare Worker backend
+    // 3. If deployed on cloud domain, default to relative /api on same origin
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return CLOUDFLARE_BACKEND_URL;
+      return `${window.location.origin}/api`;
     }
   }
 

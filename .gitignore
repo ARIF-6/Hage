@@ -55,3 +55,5 @@ coverage/
 .nyc_output/
 .cache/
 *.local
+cloudflared.exe
+render.yaml
