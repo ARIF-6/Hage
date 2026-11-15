@@ -28,6 +28,7 @@ export interface DatabaseStore {
   communityMessages: any[];
   emailNotificationLogs?: any[];
   payments?: any[];
+  feedback?: any[];
 }
 
 const DATA_DIR = path.resolve(__dirname, '../../data');

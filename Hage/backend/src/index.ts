@@ -12,6 +12,7 @@ import supportRoutes from './routes/supportRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import aiSupportRoutes from './routes/aiSupportRoutes';
 import communityRoutes from './routes/communityRoutes';
+import feedbackRoutes from './routes/feedbackRoutes';
 import { config } from './config/env';
 import { dbManager } from './config/dbManager';
 
@@ -72,6 +73,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/ai-support', aiSupportRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Static frontend serving (Production Full-Stack Deployment)
 const distCandidates = [

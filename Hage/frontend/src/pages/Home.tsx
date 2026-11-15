@@ -1,15 +1,34 @@
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   BarChart2, Calendar, Target, Shield, Zap, LayoutDashboard, 
-  CheckCircle2, ChevronRight, Star, ChevronDown 
+  CheckCircle2, ChevronRight, Star, ChevronDown, MessageSquarePlus, X, Loader2
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { loadPlanPricing, fetchRemotePricing, type AllPlanPricing } from '../store/pricingStore';
 import { HeroDashboardPreview } from '../components/home/HeroDashboardPreview';
+
+// ── Feedback types & API ──────────────────────────────────────────────────────
+interface FeedbackItem {
+  _id: string;
+  name: string;
+  role: string;
+  rating: number;
+  message: string;
+  createdAt: string;
+}
+
+const FEEDBACK_API = (() => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return 'https://hage-1.onrender.com/api/feedback';
+    }
+  }
+  return 'http://localhost:5000/api/feedback';
+})();
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },

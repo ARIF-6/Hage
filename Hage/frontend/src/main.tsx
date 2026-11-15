@@ -17,9 +17,13 @@ import App from './App.tsx'
     .catch(() => console.log('[WAKE] Backend starting up...'));
 })();
 
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  '379985610512-kdfemm9fnmcpkm6vc3lgagj9ldtq1ifh.apps.googleusercontent.com';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId="379985610512-kdfemm9fnmcpkm6vc3lgagj9ldtq1ifh.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <App />
     </GoogleOAuthProvider>
   </StrictMode>,
