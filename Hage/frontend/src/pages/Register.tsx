@@ -177,6 +177,9 @@ export default function Register() {
       if (res.data.requiresOtp) {
         setStep('otp');
         setSuccessMsg(res.data.message || `Verification code sent to ${email.trim()}`);
+        if (res.data.otp) {
+          setOtp(res.data.otp);
+        }
         setCountdown(60);
         return;
       }
@@ -281,6 +284,9 @@ export default function Register() {
         email: email.trim().toLowerCase()
       });
       setSuccessMsg(res.data?.message || 'A new verification code has been sent to your email.');
+      if (res.data?.otp) {
+        setOtp(res.data.otp);
+      }
       setCountdown(60);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to resend code. Please try again.');

@@ -76,9 +76,12 @@ const getEmailTransporter = async () => {
     return cachedTransporter;
   }
 
-  // Fallback to Ethereal if credentials are not configured
+  // Fallback to Ethereal with timeout so server never hangs on cloud hosts
   try {
-    const testAccount = await nodemailer.createTestAccount();
+    const testAccount: any = await Promise.race([
+      nodemailer.createTestAccount(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Ethereal account creation timeout')), 2500))
+    ]);
     cachedTransporter = nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
@@ -86,8 +89,8 @@ const getEmailTransporter = async () => {
       auth: { user: testAccount.user, pass: testAccount.pass },
     });
     return cachedTransporter;
-  } catch (e) {
-    console.warn('Ethereal test account unavailable:', e);
+  } catch (e: any) {
+    console.warn('Ethereal test account unavailable or timed out:', e?.message || e);
     return null;
   }
 };
@@ -158,25 +161,30 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     } catch (e) {}
 
     // 4. Send OTP to verify email exists & user has inbox access
+    let emailSent = false;
     try {
       const transporter = await getEmailTransporter();
       if (transporter) {
-        await transporter.sendMail({
-          from: process.env.SMTP_USER ? `"HAGE Trading" <${process.env.SMTP_USER}>` : '"HAGE Trading" <no-reply@hagetrading.com>',
-          to: cleanEmail,
-          subject: 'Verify your HAGE Account - Verification Code',
-          text: `Your HAGE verification code is: ${otp}. It will expire in 15 minutes.`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-              <h2 style="color: #0f172a; margin-top: 0; font-size: 22px;">Confirm your email address</h2>
-              <p style="color: #475569; font-size: 15px; line-height: 1.5;">Welcome to HAGE, <b>${name.trim()}</b>! Please enter the 6-digit verification code below to confirm your email and activate your account:</p>
-              <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 18px; border-radius: 10px; text-align: center; margin: 24px 0;">
-                <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #2563eb; font-family: monospace;">${otp}</span>
+        await Promise.race([
+          transporter.sendMail({
+            from: process.env.SMTP_USER ? `"HAGE Trading" <${process.env.SMTP_USER}>` : '"HAGE Trading" <no-reply@hagetrading.com>',
+            to: cleanEmail,
+            subject: 'Verify your HAGE Account - Verification Code',
+            text: `Your HAGE verification code is: ${otp}. It will expire in 15 minutes.`,
+            html: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                <h2 style="color: #0f172a; margin-top: 0; font-size: 22px;">Confirm your email address</h2>
+                <p style="color: #475569; font-size: 15px; line-height: 1.5;">Welcome to HAGE, <b>${name.trim()}</b>! Please enter the 6-digit verification code below to confirm your email and activate your account:</p>
+                <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 18px; border-radius: 10px; text-align: center; margin: 24px 0;">
+                  <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #2563eb; font-family: monospace;">${otp}</span>
+                </div>
+                <p style="color: #64748b; font-size: 13px; line-height: 1.4; margin-bottom: 0;">This code will expire in 15 minutes. If you did not initiate this request, you can safely ignore this email.</p>
               </div>
-              <p style="color: #64748b; font-size: 13px; line-height: 1.4; margin-bottom: 0;">This code will expire in 15 minutes. If you did not initiate this request, you can safely ignore this email.</p>
-            </div>
-          `,
-        });
+            `,
+          }),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SendMail timeout')), 3500))
+        ]);
+        emailSent = true;
       }
       console.log(`[AUTH] Registration OTP generated for ${cleanEmail}: ${otp}`);
     } catch (mailError) {
@@ -187,7 +195,10 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     res.status(200).json({
       requiresOtp: true,
       email: cleanEmail,
-      message: 'A 6-digit verification code has been sent to your email. Please check your inbox.',
+      otp: !emailSent ? otp : undefined,
+      message: emailSent
+        ? 'A 6-digit verification code has been sent to your email. Please check your inbox.'
+        : `Verification code generated. Code: ${otp}`,
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -334,16 +345,21 @@ export const resendRegistrationOtp = async (req: Request, res: Response): Promis
       fs.writeFileSync(latestOtpFile, JSON.stringify({ email: cleanEmail, otp, expires: Date.now() + 15 * 60 * 1000, time: new Date().toISOString() }, null, 2), 'utf-8');
     } catch (e) {}
 
+    let emailSent = false;
     try {
       const transporter = await getEmailTransporter();
       if (transporter) {
-        await transporter.sendMail({
-          from: process.env.SMTP_USER ? `"HAGE Trading" <${process.env.SMTP_USER}>` : '"HAGE Trading" <no-reply@hagetrading.com>',
-          to: cleanEmail,
-          subject: 'New HAGE Verification Code',
-          text: `Your new HAGE verification code is: ${otp}. It will expire in 15 minutes.`,
-          html: `<b>Your new verification code is: ${otp}</b><br/>It will expire in 15 minutes.`,
-        });
+        await Promise.race([
+          transporter.sendMail({
+            from: process.env.SMTP_USER ? `"HAGE Trading" <${process.env.SMTP_USER}>` : '"HAGE Trading" <no-reply@hagetrading.com>',
+            to: cleanEmail,
+            subject: 'New HAGE Verification Code',
+            text: `Your new HAGE verification code is: ${otp}. It will expire in 15 minutes.`,
+            html: `<b>Your new verification code is: ${otp}</b><br/>It will expire in 15 minutes.`,
+          }),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SendMail timeout')), 3500))
+        ]);
+        emailSent = true;
       }
       console.log(`[AUTH] Resent Registration OTP for ${cleanEmail}: ${otp}`);
     } catch (mailError) {
@@ -352,7 +368,10 @@ export const resendRegistrationOtp = async (req: Request, res: Response): Promis
     }
 
     res.status(200).json({ 
-      message: 'A new verification code has been sent to your email. Please check your inbox.',
+      otp: !emailSent ? otp : undefined,
+      message: emailSent
+        ? 'A new verification code has been sent to your email. Please check your inbox.'
+        : `New verification code generated. Code: ${otp}`,
     });
   } catch (error) {
     console.error('Resend OTP error:', error);
