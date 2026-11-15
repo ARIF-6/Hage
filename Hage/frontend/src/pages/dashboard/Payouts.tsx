@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   DollarSign, Clock, Plus, 
   ShieldCheck, FileText, X, CheckCircle2,
-  AlertCircle, RotateCcw, Check, Ban, AlertTriangle
+  AlertCircle, RotateCcw, Check, Ban, AlertTriangle,
+  Upload, Trash2, Image as ImageIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { useTradeStore, type Payout } from '../../store/useTradeStore';
@@ -40,6 +41,7 @@ export default function Payouts() {
   const [amount, setAmount] = useState<string>('2000');
   const [notes, setNotes] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [proofImage, setProofImage] = useState<{ url: string; name: string } | null>(null);
   const [viewingProofPayout, setViewingProofPayout] = useState<Payout | null>(null);
 
   const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId) || eligibleAccounts[0];
@@ -114,6 +116,7 @@ export default function Payouts() {
     }
 
     setError('');
+    setProofImage(null);
     setIsRequestModalOpen(true);
   };
 
@@ -151,11 +154,15 @@ export default function Payouts() {
       date: new Date().toISOString(),
       status: 'Pending',
       notes,
+      proofUrl: proofImage?.url,
+      proofName: proofImage?.name,
+      proofDate: proofImage ? new Date().toISOString() : undefined,
     });
 
     setIsRequestModalOpen(false);
     setAmount('0');
     setNotes('');
+    setProofImage(null);
     setError('');
   };
 
@@ -690,6 +697,78 @@ export default function Payouts() {
                       placeholder="e.g. Bank Wire / Deel / Crypto USDT"
                       className="w-full px-2 py-1 text-xs font-medium rounded-lg bg-gray-50 dark:bg-[#182030] border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                     />
+                  </div>
+
+                  {/* Upload Photo Proof (Optional) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <label className="block text-[11px] font-bold text-gray-700 dark:text-slate-300">
+                        Payout Proof Photo (Optional)
+                      </label>
+                      <span className="text-[9px] text-gray-400">PNG, JPG, WEBP (Max 5MB)</span>
+                    </div>
+
+                    {!proofImage ? (
+                      <label className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-gray-200 dark:border-slate-700 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 rounded-xl bg-gray-50/60 dark:bg-[#182030]/60 hover:bg-gray-100/60 dark:hover:bg-[#182030] cursor-pointer transition-all group">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-slate-300 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
+                          <Upload className="w-4 h-4 shrink-0 text-emerald-500" />
+                          <span className="text-xs font-semibold">Upload certificate or receipt</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-0.5 text-center">
+                          Click to browse photo from prop firm payout or bank receipt
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) {
+                              setError('File size must be under 5MB.');
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              setProofImage({
+                                url: reader.result as string,
+                                name: file.name,
+                              });
+                              setError('');
+                            };
+                            reader.readAsDataURL(file);
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    ) : (
+                      <div className="flex items-center justify-between p-2 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <img
+                            src={proofImage.url}
+                            alt="Proof Preview"
+                            className="w-10 h-10 rounded-lg object-cover border border-emerald-300 dark:border-emerald-800 shadow-xs shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                              {proofImage.name}
+                            </p>
+                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Photo attached (Optional)
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setProofImage(null)}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0"
+                          title="Remove photo"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
