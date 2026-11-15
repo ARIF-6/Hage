@@ -16,6 +16,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [wakeStatus, setWakeStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -27,14 +28,32 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setWakeStatus('');
     setSubmitting(true);
 
+    const attemptLogin = async (attempt: number = 1): Promise<any> => {
+      try {
+        if (attempt > 1) {
+          setWakeStatus(`Server is waking up (attempt ${attempt}/3)... Please wait.`);
+        }
+        return await axios.post(`${AUTH_API}/login`, {
+          email: email.trim().toLowerCase(),
+          password
+        }, { timeout: 40000 });
+      } catch (err: any) {
+        // Only retry on network errors (backend asleep or spinning up), NOT 400/401/404 credentials errors
+        if (!err.response && attempt < 3) {
+          setWakeStatus(`Server is waking up from sleep (attempt ${attempt}/3). Retrying in 4 seconds...`);
+          await new Promise((r) => setTimeout(r, 4000));
+          return attemptLogin(attempt + 1);
+        }
+        throw err;
+      }
+    };
+
     try {
-      // 1. Try real backend API
-      const res = await axios.post(`${AUTH_API}/login`, {
-        email,
-        password
-      });
+      // 1. Try real backend API with auto-retry for cold starts
+      const res = await attemptLogin(1);
 
       const { token, role, isSuspended, name, email: userEmail, subscriptionPlan, subscriptionStatus } = res.data;
 
@@ -99,8 +118,13 @@ export default function Login() {
         navigate('/dashboard');
       }
     } catch (err: any) {
+      setWakeStatus('');
       if (err.response) {
-        setError(err.response.data?.message || 'Invalid email or password.');
+        if (err.response.status === 404) {
+          setError('No account found with this email address. Please click "Sign up" below to create your account.');
+        } else {
+          setError(err.response.data?.message || 'Invalid email or password.');
+        }
         setSubmitting(false);
         return;
       }
@@ -115,7 +139,7 @@ export default function Login() {
 
       const matchedUser = localUsers.find(u => u.email?.toLowerCase().trim() === cleanEmail);
       if (!matchedUser) {
-        setError('Cannot connect to authentication server. Please check your connection or ensure backend is running.');
+        setError('The server is taking longer than usual to wake up (Render free tier sleeps when idle). Please wait 10 seconds and click Sign in again.');
         setSubmitting(false);
         return;
       }
@@ -244,6 +268,13 @@ export default function Login() {
           </p>
         </CardHeader>
         <CardContent>
+          {wakeStatus && (
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg border border-blue-200 dark:border-blue-900/60 flex items-center gap-2 leading-relaxed">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping shrink-0" />
+              <span>{wakeStatus}</span>
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-rose-950/60 text-red-700 dark:text-rose-300 text-xs font-semibold rounded-lg border border-red-200 dark:border-rose-900/60 leading-relaxed">
               {error}
@@ -289,7 +320,7 @@ export default function Login() {
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? 'Signing in...' : 'Sign in'}
+              {submitting ? (wakeStatus ? 'Waking up server...' : 'Signing in...') : 'Sign in'}
             </Button>
           </form>
 

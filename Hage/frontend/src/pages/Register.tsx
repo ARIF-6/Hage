@@ -95,6 +95,7 @@ export default function Register() {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [wakeStatus, setWakeStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -165,14 +166,31 @@ export default function Register() {
     }
 
     setSubmitting(true);
+    setWakeStatus('');
+
+    const attemptRegister = async (attempt: number = 1): Promise<any> => {
+      try {
+        if (attempt > 1) {
+          setWakeStatus(`Server is waking up (attempt ${attempt}/3)... Please wait.`);
+        }
+        return await axios.post(`${AUTH_API}/register`, {
+          name,
+          email: email.trim().toLowerCase(),
+          password
+        }, { timeout: 40000 });
+      } catch (err: any) {
+        if (!err.response && attempt < 3) {
+          setWakeStatus(`Server is waking up from sleep (attempt ${attempt}/3). Retrying in 4 seconds...`);
+          await new Promise((r) => setTimeout(r, 4000));
+          return attemptRegister(attempt + 1);
+        }
+        throw err;
+      }
+    };
 
     try {
-      // 1. Try real backend API
-      const res = await axios.post(`${AUTH_API}/register`, {
-        name,
-        email: email.trim().toLowerCase(),
-        password
-      });
+      // 1. Try real backend API with cold start retry
+      const res = await attemptRegister(1);
 
       if (res.data.requiresOtp) {
         setStep('otp');
@@ -207,6 +225,7 @@ export default function Register() {
         setStep('plans');
       }
     } catch (err: any) {
+      setWakeStatus('');
       // If the backend returned an explicit validation error, show it!
       if (err.response) {
         setError(err.response.data?.message || 'Registration failed. Please check your details.');
@@ -215,7 +234,7 @@ export default function Register() {
       }
 
       // 2. Offline fallback ONLY if backend server is unreachable
-      setError('Unable to reach the authentication server. Please check your internet connection or verify the backend service URL.');
+      setError('The server is taking longer than usual to wake up (Render free tier sleeps when idle). Please wait a few seconds and click Create Account again.');
     } finally {
       setSubmitting(false);
     }
@@ -534,6 +553,12 @@ export default function Register() {
               </p>
             </CardHeader>
             <CardContent>
+              {wakeStatus && (
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg border border-blue-200 dark:border-blue-900/60 flex items-center gap-2 leading-relaxed">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping shrink-0" />
+                  <span>{wakeStatus}</span>
+                </div>
+              )}
               {error && (
                 <div className="mb-4 p-3 bg-red-50 dark:bg-rose-950/60 text-red-700 dark:text-rose-300 text-sm rounded-lg border border-red-200 dark:border-rose-900/60">
                   {error}
@@ -587,7 +612,7 @@ export default function Register() {
                 />
 
                 <Button type="submit" className="w-full mt-4" disabled={submitting}>
-                  {submitting ? 'Verifying email & sending code...' : 'Continue with Email'}
+                  {submitting ? (wakeStatus ? 'Waking up server...' : 'Verifying email & sending code...') : 'Continue with Email'}
                 </Button>
               </form>
 
