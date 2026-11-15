@@ -2,7 +2,7 @@
  * CryptoPaymentModal.tsx
  *
  * Professional Web3 Crypto Checkout for USDT on BNB Smart Chain (BEP20).
- * Strict Design System: Navy Blue (#0E235C) | Pure White (#FFFFFF) | Accent Blue (#3B82F6)
+ * Strict Design System: Navy Blue (#0F172A) | Pure White (#FFFFFF) | Accent Blue (#3B82F6)
  *
  * Features:
  * - 2-Step interactive flow (Wallet Input → Invoice & Live Settlement)
@@ -215,15 +215,15 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      style={{ backgroundColor: 'rgba(14, 35, 92, 0.85)', backdropFilter: 'blur(12px)' }}
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)' }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div
         className="w-full max-w-lg rounded-3xl overflow-hidden max-h-[92vh] flex flex-col"
         style={{
-          backgroundColor: '#0E235C',
-          border: '2px solid rgba(255, 255, 255, 0.18)',
-          boxShadow: '0 25px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+          backgroundColor: '#0F172A',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 25px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)',
         }}
       >
 
@@ -300,7 +300,7 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                 className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
                 style={{
                   backgroundColor: '#FFFFFF',
-                  color: '#0E235C',
+                  color: '#0F172A',
                 }}
               >
                 {phase === 'address_input' ? '1' : <Check className="w-3 h-3" />}
@@ -317,7 +317,7 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                   backgroundColor: phase === 'address_input'
                     ? 'rgba(255,255,255,0.1)'
                     : '#FFFFFF',
-                  color: phase === 'address_input' ? 'rgba(255,255,255,0.4)' : '#0E235C',
+                  color: phase === 'address_input' ? 'rgba(255,255,255,0.4)' : '#0F172A',
                 }}
               >
                 {phase === 'success' ? <Check className="w-3 h-3" /> : '2'}
@@ -481,7 +481,7 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 px-5 rounded-2xl font-extrabold text-sm transition-all cursor-pointer active:scale-[0.99]"
                   style={{
                     backgroundColor: '#FFFFFF',
-                    color: '#0E235C',
+                    color: '#0F172A',
                     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
                   }}
                 >
@@ -529,7 +529,7 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                 <button
                   onClick={() => setPhase('address_input')}
                   className="px-5 py-2.5 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                  style={{ backgroundColor: '#FFFFFF', color: '#0E235C' }}
+                  style={{ backgroundColor: '#FFFFFF', color: '#0F172A' }}
                 >
                   Try Again
                 </button>
@@ -580,7 +580,7 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                 <button
                   onClick={() => setPhase('address_input')}
                   className="px-5 py-2.5 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                  style={{ backgroundColor: '#FFFFFF', color: '#0E235C' }}
+                  style={{ backgroundColor: '#FFFFFF', color: '#0F172A' }}
                 >
                   Start Over
                 </button>
@@ -735,7 +735,7 @@ export function CryptoPaymentModal({ planKey, planLabel, usdAmount, onSuccess, o
                   className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all disabled:opacity-50 cursor-pointer active:scale-[0.99]"
                   style={{
                     backgroundColor: '#FFFFFF',
-                    color: '#0E235C',
+                    color: '#0F172A',
                     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
                   }}
                 >
