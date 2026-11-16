@@ -34,7 +34,7 @@ export default function Login() {
     const attemptLogin = async (attempt: number = 1): Promise<any> => {
       try {
         if (attempt > 1) {
-          setWakeStatus(`Server is waking up (attempt ${attempt}/3)... Please wait.`);
+          setWakeStatus('Connecting to server, please wait a moment...');
         }
         return await axios.post(`${AUTH_API}/login`, {
           email: email.trim().toLowerCase(),
@@ -43,7 +43,7 @@ export default function Login() {
       } catch (err: any) {
         // Only retry on network errors (backend asleep or spinning up), NOT 400/401/404 credentials errors
         if (!err.response && attempt < 3) {
-          setWakeStatus(`Server is waking up from sleep (attempt ${attempt}/3). Retrying in 4 seconds...`);
+          setWakeStatus('Still connecting... Please hold on.');
           await new Promise((r) => setTimeout(r, 4000));
           return attemptLogin(attempt + 1);
         }
@@ -139,7 +139,7 @@ export default function Login() {
 
       const matchedUser = localUsers.find(u => u.email?.toLowerCase().trim() === cleanEmail);
       if (!matchedUser) {
-        setError('The server is taking longer than usual to wake up (Render free tier sleeps when idle). Please wait 10 seconds and click Sign in again.');
+        setError('Unable to connect. Please wait a moment and try again.');
         setSubmitting(false);
         return;
       }
@@ -320,7 +320,7 @@ export default function Login() {
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? (wakeStatus ? 'Waking up server...' : 'Signing in...') : 'Sign in'}
+              {submitting ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
 

@@ -171,7 +171,7 @@ export default function Register() {
     const attemptRegister = async (attempt: number = 1): Promise<any> => {
       try {
         if (attempt > 1) {
-          setWakeStatus(`Server is waking up (attempt ${attempt}/3)... Please wait.`);
+          setWakeStatus('Connecting to server, please wait a moment...');
         }
         return await axios.post(`${AUTH_API}/register`, {
           name,
@@ -180,7 +180,7 @@ export default function Register() {
         }, { timeout: 40000 });
       } catch (err: any) {
         if (!err.response && attempt < 3) {
-          setWakeStatus(`Server is waking up from sleep (attempt ${attempt}/3). Retrying in 4 seconds...`);
+          setWakeStatus('Still connecting... Please hold on.');
           await new Promise((r) => setTimeout(r, 4000));
           return attemptRegister(attempt + 1);
         }
@@ -234,7 +234,7 @@ export default function Register() {
       }
 
       // 2. Offline fallback ONLY if backend server is unreachable
-      setError('The server is taking longer than usual to wake up (Render free tier sleeps when idle). Please wait a few seconds and click Create Account again.');
+      setError('Unable to connect. Please wait a moment and try again.');
     } finally {
       setSubmitting(false);
     }
