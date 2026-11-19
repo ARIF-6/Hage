@@ -145,10 +145,10 @@ export default function Calendar() {
 
   const formatValue = (value: number) => {
     if (displayMode === 'percent') {
-      if (value === 0) return '0.00%';
+      if (value === 0) return '0%';
       const pct = baseBalance > 0 ? (value / baseBalance) * 100 : 0;
       const sign = pct > 0 ? '+' : '';
-      return `${sign}${pct.toFixed(2)}%`;
+      return `${sign}${Math.round(pct)}%`;
     }
     return formatCurrency(value);
   };
@@ -314,7 +314,7 @@ export default function Calendar() {
                 <div key={idx} className="min-h-[120px] flex flex-col justify-center items-center p-2 rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-[#161F30]/50 shadow-sm">
                   <span className="text-[10px] font-medium text-gray-400 dark:text-slate-400 mb-1">{week.label}</span>
                   <span className={`text-[13px] font-black mb-1.5 ${week.pnl > 0 ? 'text-[#0f763f] dark:text-emerald-400' : week.pnl < 0 ? 'text-[#c53030] dark:text-rose-400' : 'text-gray-900 dark:text-slate-200'}`}>
-                    {week.pnl === 0 ? (displayMode === 'percent' ? '0.00%' : '$0') : formatValue(week.pnl)}
+                    {week.pnl === 0 ? (displayMode === 'percent' ? '0%' : '$0') : formatValue(week.pnl)}
                   </span>
                   <span className="px-2 py-0.5 bg-indigo-50 dark:bg-blue-950/70 text-indigo-600 dark:text-blue-400 text-[10px] font-bold rounded-md border border-indigo-100 dark:border-blue-900/60">
                     {week.days} {week.days === 1 ? 'day' : 'days'}

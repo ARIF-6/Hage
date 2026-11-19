@@ -130,10 +130,10 @@ export function DashboardCalendar() {
 
   const formatValue = (value: number) => {
     if (displayMode === 'percent') {
-      if (value === 0) return '0.00%';
+      if (value === 0) return '0%';
       const pct = baseBalance > 0 ? (value / baseBalance) * 100 : 0;
       const sign = pct > 0 ? '+' : '';
-      return `${sign}${pct.toFixed(2)}%`;
+      return `${sign}${Math.round(pct)}%`;
     }
     return formatCurrency(value);
   };
@@ -308,7 +308,7 @@ export function DashboardCalendar() {
                 : week.pnl < 0 ? 'text-[#c53030] dark:text-rose-400'
                 : 'text-gray-900 dark:text-slate-200'
               }`}>
-                {week.pnl === 0 ? (displayMode === 'percent' ? '0.00%' : '$0') : formatValue(week.pnl)}
+                {week.pnl === 0 ? (displayMode === 'percent' ? '0%' : '$0') : formatValue(week.pnl)}
               </span>
               <span className="px-1.5 py-0.5 bg-indigo-50 dark:bg-blue-950/70 text-indigo-600 dark:text-blue-400 text-[9px] font-bold rounded border border-indigo-100 dark:border-blue-900/60">
                 {week.days} {week.days === 1 ? 'day' : 'days'}
