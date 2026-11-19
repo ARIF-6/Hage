@@ -4,7 +4,8 @@ import {
   getChallenges,
   createChallenge,
   getChallengeDetails,
-  submitCheckIn
+  submitCheckIn,
+  restoreStreak
 } from '../controllers/tradingChallengeController';
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get('/', getChallenges);
 router.post('/', createChallenge);
 router.get('/:id', getChallengeDetails);
 router.post('/:id/checkin', submitCheckIn);
+router.post('/:id/restore-streak', restoreStreak);
 
 export default router;

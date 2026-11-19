@@ -441,3 +441,60 @@ export const submitCheckIn = async (req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({ message: 'Failed to record check-in' });
   }
 };
+
+// POST /api/trading-challenges/:id/restore-streak
+export const restoreStreak = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?._id?.toString() || req.user?.id?.toString();
+    const { id } = req.params;
+
+    let challenge: any = null;
+    let checkIns: any[] = [];
+
+    if (dbManager.getIsMongoConnected()) {
+      try {
+        challenge = await TradingChallenge.findOne({ _id: id, user: userId });
+        if (challenge) {
+          checkIns = await TradingCheckIn.find({ challengeId: id, user: userId }).sort({ date: -1 });
+        }
+      } catch (e) {}
+    }
+
+    const store = getStore();
+    if (!challenge) {
+      challenge = store.tradingChallenges.find((c: any) => (c._id === id || c.id === id) && c.user?.toString() === userId);
+      if (challenge) {
+        checkIns = store.tradingCheckIns.filter((ci: any) => (ci.challengeId === id) && ci.user?.toString() === userId);
+      }
+    }
+
+    if (!challenge) {
+      res.status(404).json({ message: 'Challenge not found' });
+      return;
+    }
+
+    // A broken streak means longestStreak > 0 and currentStreak === 0 (or less than previous unbroken count)
+    const restoredValue = Math.max(1, challenge.longestStreak || checkIns.length || 1);
+
+    if (challenge.save) {
+      challenge.currentStreak = restoredValue;
+      challenge.restoredStreak = restoredValue;
+      challenge.streakRestoredAt = new Date();
+      await challenge.save();
+    } else {
+      challenge.currentStreak = restoredValue;
+      challenge.restoredStreak = restoredValue;
+      challenge.streakRestoredAt = new Date().toISOString();
+      challenge.updatedAt = new Date().toISOString();
+      saveStore();
+    }
+
+    res.json({
+      message: `Streak successfully restored to ${restoredValue} days!`,
+      currentStreak: restoredValue
+    });
+  } catch (error) {
+    console.error('restoreStreak error:', error);
+    res.status(500).json({ message: 'Failed to restore streak' });
+  }
+};

@@ -13,6 +13,8 @@ export interface ITradingChallenge extends Document {
   status: 'active' | 'completed' | 'failed' | 'abandoned';
   currentStreak: number;
   longestStreak: number;
+  restoredStreak?: number;
+  streakRestoredAt?: Date;
   completedDays: number;
   missedDays: number;
   completionPercentage: number;
@@ -34,6 +36,8 @@ const TradingChallengeSchema: Schema = new Schema({
   status: { type: String, enum: ['active', 'completed', 'failed', 'abandoned'], default: 'active' },
   currentStreak: { type: Number, default: 0 },
   longestStreak: { type: Number, default: 0 },
+  restoredStreak: { type: Number, default: 0 },
+  streakRestoredAt: { type: Date },
   completedDays: { type: Number, default: 0 },
   missedDays: { type: Number, default: 0 },
   completionPercentage: { type: Number, default: 0 },

@@ -117,5 +117,10 @@ export const challengeService = {
   }> {
     const res = await axios.post(`${API_BASE}/${challengeId}/checkin`, data, { headers: getAuthHeaders() });
     return res.data;
+  },
+
+  async restoreStreak(challengeId: string): Promise<{ message: string; currentStreak: number }> {
+    const res = await axios.post(`${API_BASE}/${challengeId}/restore-streak`, {}, { headers: getAuthHeaders() });
+    return res.data;
   }
 };

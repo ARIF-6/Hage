@@ -4,7 +4,7 @@ import {
   Trophy, Flame, Plus, CheckCircle2, XCircle, Clock,
   Calendar as CalendarIcon, Upload, Video, Image, FileText,
   Award, TrendingUp, ChevronRight, X, AlertCircle, Play,
-  Download, Eye, Check, Target, Zap
+  Download, Eye, Check, Target, Zap, RotateCcw
 } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { Button } from '../../components/ui/Button';
@@ -48,7 +48,25 @@ export default function TradingChallenge() {
   const certRef = useRef<HTMLDivElement>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  // Video duration element ref for pre-upload validation
+  const [isRestoringStreak, setIsRestoringStreak] = useState(false);
+  const [restoreMessage, setRestoreMessage] = useState('');
+
+  const handleRestoreStreak = async () => {
+    if (!selectedChallenge) return;
+    if (triggerReadOnlyAlert('restore your streak')) return;
+    const challengeId = selectedChallenge._id || selectedChallenge.id || '';
+    setIsRestoringStreak(true);
+    setRestoreMessage('');
+    try {
+      const res = await challengeService.restoreStreak(challengeId);
+      setRestoreMessage(res.message);
+      await loadAll();
+    } catch (e: any) {
+      setRestoreMessage(e.response?.data?.message || 'Failed to restore streak');
+    } finally {
+      setIsRestoringStreak(false);
+    }
+  };
   const videoInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -325,11 +343,28 @@ export default function TradingChallenge() {
 
         <Card className="bg-white dark:bg-[#111722] border-gray-200/80 dark:border-[#1E293B]">
           <CardContent className="p-4 flex items-center justify-between">
-            <div>
+            <div className="space-y-0.5">
               <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Current Streak</p>
-              <p className="text-2xl font-bold text-amber-500 mt-0.5 flex items-center gap-1.5">
-                {selectedChallenge?.currentStreak || 0} <span className="text-xs font-semibold text-slate-400">days</span>
-              </p>
+              <div className="flex items-center gap-2">
+                <p className={`text-2xl font-bold flex items-center gap-1.5 ${
+                  (selectedChallenge?.currentStreak || 0) > 0 ? 'text-amber-500' : 'text-slate-400'
+                }`}>
+                  {selectedChallenge?.currentStreak || 0} <span className="text-xs font-semibold text-slate-400">days</span>
+                </p>
+                {/* Restore Streak Button when broken */}
+                {selectedChallenge && (selectedChallenge.currentStreak === 0) && (selectedChallenge.longestStreak > 0 || (selectedChallenge.completedDays || 0) > 0) && (
+                  <button
+                    type="button"
+                    onClick={handleRestoreStreak}
+                    disabled={isRestoringStreak}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[10px] font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+                    title="Streak broken? Click to restore your previous active streak"
+                  >
+                    <RotateCcw className={`w-3 h-3 ${isRestoringStreak ? 'animate-spin' : ''}`} />
+                    {isRestoringStreak ? 'Restoring...' : 'Restore Streak'}
+                  </button>
+                )}
+              </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
               <Flame className="w-5 h-5 m-auto" />
@@ -467,6 +502,17 @@ export default function TradingChallenge() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {selectedChallenge.currentStreak === 0 && (selectedChallenge.longestStreak > 0 || (selectedChallenge.completedDays || 0) > 0) && (
+                    <Button
+                      onClick={handleRestoreStreak}
+                      disabled={isRestoringStreak}
+                      variant="outline"
+                      className="border-amber-500/40 text-amber-500 hover:bg-amber-500/10 text-xs font-semibold"
+                    >
+                      <RotateCcw className={`w-3.5 h-3.5 mr-1.5 ${isRestoringStreak ? 'animate-spin' : ''}`} />
+                      {isRestoringStreak ? 'Restoring...' : 'Restore Streak'}
+                    </Button>
+                  )}
                   <Button
                     onClick={() => setActiveTab('checkin')}
                     className="bg-[#6355F6] hover:bg-[#5244E3] text-white text-xs font-semibold"
