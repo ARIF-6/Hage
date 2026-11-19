@@ -46,6 +46,8 @@ const staggerContainer = {
 
 export default function Home() {
   const [pricing, setPricing] = useState<AllPlanPricing>(() => loadPlanPricing());
+  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
 
   useEffect(() => {
     fetchRemotePricing().then(setPricing);
@@ -59,6 +61,14 @@ export default function Home() {
     };
 
     window.addEventListener('pricingUpdated', handlePricingUpdated);
+
+    // Fetch live approved feedback
+    fetch(FEEDBACK_API)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: FeedbackItem[]) => setFeedbacks(Array.isArray(data) ? data : []))
+      .catch(() => setFeedbacks([]))
+      .finally(() => setFeedbackLoading(false));
+
     return () => window.removeEventListener('pricingUpdated', handlePricingUpdated);
   }, []);
   return (
@@ -337,33 +347,74 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* LIVE FEEDBACK */}
       <section className="py-24 bg-gray-50 dark:bg-[#0E235C] transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-16">
-            Loved by professional traders
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            What our traders say
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[1, 2, 3].map((_, idx) => (
-              <Card key={idx} className="p-6 text-left border-gray-200 dark:border-slate-800">
-                <div className="flex text-yellow-400 mb-4">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
-                </div>
-                <p className="text-gray-600 dark:text-slate-300 mb-6">
-                  "HAGE completely transformed how I analyze my setups. The clean UI and powerful analytics are unmatched."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                    AT
-                  </div>
-                  <div>
-                    <h5 className="font-semibold text-gray-900 dark:text-white text-sm">Alex Thompson</h5>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">Funded Trader</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+          <p className="text-gray-500 dark:text-slate-400 mb-14 text-base">
+            Real feedback from real HAGE users.
+          </p>
+
+          {feedbackLoading ? (
+            <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-12">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-sm">Loading feedback…</span>
+            </div>
+          ) : feedbacks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-gray-400 dark:text-slate-500">
+              <MessageSquarePlus className="w-10 h-10 opacity-40" />
+              <p className="text-sm font-medium">Be the first to share your experience</p>
+            </div>
+          ) : (
+            <motion.div
+              variants={staggerContainer}
+              initial="initial"
+              whileInView="whileInView"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {feedbacks.map((fb) => {
+                const initials = fb.name
+                  .split(' ')
+                  .map(w => w[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase();
+                return (
+                  <motion.div key={fb._id} variants={fadeInUp}>
+                    <Card className="p-6 text-left border-gray-200 dark:border-slate-800 h-full flex flex-col">
+                      {/* Stars */}
+                      <div className="flex text-yellow-400 mb-4">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${i < fb.rating ? 'fill-current' : 'opacity-20'}`}
+                          />
+                        ))}
+                      </div>
+                      {/* Message */}
+                      <p className="text-gray-600 dark:text-slate-300 mb-6 flex-grow leading-relaxed">
+                        "{fb.message}"
+                      </p>
+                      {/* Author */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0">
+                          {initials}
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-gray-900 dark:text-white text-sm">{fb.name}</h5>
+                          {fb.role && (
+                            <p className="text-xs text-gray-500 dark:text-slate-400">{fb.role}</p>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
         </div>
       </section>
 
