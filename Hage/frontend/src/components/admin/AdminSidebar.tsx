@@ -21,7 +21,6 @@ const adminLinks = [
   { icon: AlertTriangle, label: 'System Errors', path: '/admin/errors', color: 'text-rose-400', glow: 'shadow-rose-500/20' },
   { icon: History, label: 'Activity', path: '/admin/activity', color: 'text-purple-400', glow: 'shadow-purple-500/20' },
   { icon: Mail, label: 'Email Notify', path: '/admin/email', color: 'text-violet-400', glow: 'shadow-violet-500/20' },
-  { icon: MessagesSquare, label: 'Community Groups', path: '/admin/community-groups', color: 'text-blue-400', glow: 'shadow-blue-500/20' },
   { icon: Settings, label: 'Settings', path: '/admin/settings', color: 'text-slate-400', glow: 'shadow-slate-500/20' },
 ];
 

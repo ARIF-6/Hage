@@ -20,7 +20,6 @@ import Subscription from './pages/dashboard/Subscription';
 import Support from './pages/dashboard/Support';
 import Settings from './pages/dashboard/Settings';
 import Payouts from './pages/dashboard/Payouts';
-import Community from './pages/dashboard/Community';
 import TradingChallenge from './pages/dashboard/TradingChallenge';
 
 import { DashboardRoute } from './components/auth/DashboardRoute';
@@ -42,7 +41,6 @@ import AdminActivity from './pages/admin/AdminActivity';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminPortal from './pages/admin/AdminPortal';
 import AdminEmailNotifications from './pages/admin/AdminEmailNotifications';
-import AdminCommunityGroups from './pages/admin/AdminCommunityGroups';
 
 function App() {
   return (
@@ -78,7 +76,6 @@ function App() {
             <Route path="subscription" element={<Subscription />} />
             <Route path="support" element={<Support />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="community" element={<Community />} />
             <Route path="*" element={<Dashboard />} />
           </Route>
 
@@ -106,7 +103,6 @@ function App() {
             <Route path="activity" element={<AdminActivity />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="email" element={<AdminEmailNotifications />} />
-            <Route path="community-groups" element={<AdminCommunityGroups />} />
             <Route path="*" element={<AdminOverview />} />
           </Route>
         </Routes>

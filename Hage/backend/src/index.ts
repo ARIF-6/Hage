@@ -11,7 +11,6 @@ import adminRoutes from './routes/adminRoutes';
 import supportRoutes from './routes/supportRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import aiSupportRoutes from './routes/aiSupportRoutes';
-import communityRoutes from './routes/communityRoutes';
 import feedbackRoutes from './routes/feedbackRoutes';
 import tradingChallengeRoutes from './routes/tradingChallengeRoutes';
 import { config } from './config/env';
@@ -73,7 +72,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/ai-support', aiSupportRoutes);
-app.use('/api/community', communityRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/trading-challenges', tradingChallengeRoutes);
 

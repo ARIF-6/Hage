@@ -34,4 +34,3 @@ export const API_BASE = getApiBaseUrl();
 export const AUTH_API = `${API_BASE}/auth`;
 export const PAYMENTS_API = `${API_BASE}/payments`;
 export const JOURNAL_API = `${API_BASE}/journal`;
-export const COMMUNITY_API = `${API_BASE}/community`;

@@ -25,7 +25,6 @@ export interface DatabaseStore {
   aiConversations: any[];
   aiMessages: any[];
   aiKnowledgeDocs: any[];
-  communityMessages: any[];
   tradingChallenges?: any[];
   tradingCheckIns?: any[];
   emailNotificationLogs?: any[];
@@ -56,7 +55,6 @@ export class DbManager {
     aiConversations: [],
     aiMessages: [],
     aiKnowledgeDocs: [],
-    communityMessages: [],
     tradingChallenges: [],
     tradingCheckIns: []
   };
@@ -191,8 +189,7 @@ export class DbManager {
       adminActivities: [],
       aiConversations: [],
       aiMessages: [],
-      aiKnowledgeDocs: [],
-      communityMessages: []
+      aiKnowledgeDocs: []
     };
     this.saveToDisk();
   }

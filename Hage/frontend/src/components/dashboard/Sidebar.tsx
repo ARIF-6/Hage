@@ -124,7 +124,6 @@ export function Sidebar() {
     { icon: DollarSign, label: 'Payouts', path: '/dashboard/payouts' },
     { icon: Award, label: 'Certificates', path: '/dashboard/certificates' },
     { icon: CreditCard, label: 'Subscription', path: '/dashboard/subscription' },
-    { icon: MessageSquare, label: 'Community', path: '/dashboard/community' },
   ];
 
   const isUnsubscribed = !hasUserPurchasedPlan() && localStorage.getItem('user_role') !== 'admin';
