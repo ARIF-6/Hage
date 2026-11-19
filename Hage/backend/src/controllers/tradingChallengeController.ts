@@ -16,11 +16,23 @@ function saveStore() {
 }
 
 // Helper: Calculate streak, completed, missed, percentage from start date to today
-function calculateChallengeMetrics(startDateStr: string, durationDays: number, checkInDates: string[]) {
+// STRICT 24-HOUR STREAK RULE:
+// The streak is broken (resets to 0) if a user misses any consecutive 24-hour cycle.
+// Specifically: If today has not been checked in, and yesterday was missed (> 24 hours), current streak is immediately 0.
+function calculateChallengeMetrics(
+  startDateStr: string,
+  durationDays: number,
+  checkInDates: string[],
+  lastCheckInCreatedAt?: string | Date
+) {
   const checkInSet = new Set(checkInDates);
   const start = new Date(startDateStr);
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
 
   let completedDays = 0;
   let currentStreak = 0;
@@ -46,29 +58,50 @@ function calculateChallengeMetrics(startDateStr: string, durationDays: number, c
       runningStreak = 0;
     }
 
-    // Current streak is continuous check-ins ending today or yesterday
     if (dateStr === todayStr) {
       currentStreak = runningStreak;
     }
   }
 
-  // If today hasn't been checked in yet, check if yesterday was part of current streak
-  if (!checkInSet.has(todayStr)) {
-    const y = new Date(now);
-    y.setDate(y.getDate() - 1);
-    const yStr = y.toISOString().split('T')[0];
-    if (checkInSet.has(yStr)) {
-      // Trace backwards from yesterday
+  // Check strict 24-hour threshold
+  if (checkInSet.has(todayStr)) {
+    // Checked in today: streak is valid and active
+    let traceStreak = 0;
+    let cur = new Date(now);
+    while (checkInSet.has(cur.toISOString().split('T')[0])) {
+      traceStreak++;
+      cur.setDate(cur.getDate() - 1);
+    }
+    currentStreak = traceStreak;
+  } else if (checkInSet.has(yesterdayStr)) {
+    // Yesterday was completed; user is currently within the 24-hour window for today
+    if (lastCheckInCreatedAt) {
+      const lastTime = new Date(lastCheckInCreatedAt).getTime();
+      const elapsedHours = (now.getTime() - lastTime) / (1000 * 60 * 60);
+      if (elapsedHours > 36) {
+        // More than 36 hours since previous day check-in -> 24h cycle broken
+        currentStreak = 0;
+      } else {
+        let traceStreak = 0;
+        let cur = new Date(yesterday);
+        while (checkInSet.has(cur.toISOString().split('T')[0])) {
+          traceStreak++;
+          cur.setDate(cur.getDate() - 1);
+        }
+        currentStreak = traceStreak;
+      }
+    } else {
       let traceStreak = 0;
-      let cur = new Date(y);
+      let cur = new Date(yesterday);
       while (checkInSet.has(cur.toISOString().split('T')[0])) {
         traceStreak++;
         cur.setDate(cur.getDate() - 1);
       }
       currentStreak = traceStreak;
-    } else {
-      currentStreak = 0;
     }
+  } else {
+    // Neither today nor yesterday was checked in (>24-48 hours passed) -> streak is strictly BROKEN (0)
+    currentStreak = 0;
   }
 
   const completionPercentage = Math.min(100, Math.round((completedDays / durationDays) * 100));
@@ -212,9 +245,15 @@ export const getChallengeDetails = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // Refresh streak and metrics
+    // Refresh streak and metrics (Pass latest check-in time for strict 24-hour verification)
     const checkInDates = checkIns.map((c: any) => c.date);
-    const metrics = calculateChallengeMetrics(challenge.startDate, challenge.durationDays, checkInDates);
+    const latestCheckIn = checkIns.length > 0 ? checkIns[0] : null;
+    const metrics = calculateChallengeMetrics(
+      challenge.startDate,
+      challenge.durationDays,
+      checkInDates,
+      latestCheckIn?.createdAt
+    );
 
     let updatedStatus = challenge.status;
     if (metrics.completedDays >= challenge.durationDays && challenge.status === 'active') {
@@ -351,7 +390,12 @@ export const submitCheckIn = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     const checkInDates = allUserCheckIns.map(c => c.date);
-    const metrics = calculateChallengeMetrics(challenge.startDate, challenge.durationDays, checkInDates);
+    const metrics = calculateChallengeMetrics(
+      challenge.startDate,
+      challenge.durationDays,
+      checkInDates,
+      savedCheckIn.createdAt
+    );
 
     let isCompleted = metrics.completedDays >= challenge.durationDays;
     let certId = challenge.certificateId;
