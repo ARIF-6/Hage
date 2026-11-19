@@ -26,6 +26,8 @@ export interface DatabaseStore {
   aiMessages: any[];
   aiKnowledgeDocs: any[];
   communityMessages: any[];
+  tradingChallenges?: any[];
+  tradingCheckIns?: any[];
   emailNotificationLogs?: any[];
   payments?: any[];
   feedback?: any[];
@@ -54,7 +56,9 @@ export class DbManager {
     aiConversations: [],
     aiMessages: [],
     aiKnowledgeDocs: [],
-    communityMessages: []
+    communityMessages: [],
+    tradingChallenges: [],
+    tradingCheckIns: []
   };
 
   private constructor() {
@@ -85,6 +89,8 @@ export class DbManager {
         if (!this.memoryStore.aiConversations) this.memoryStore.aiConversations = [];
         if (!this.memoryStore.aiMessages) this.memoryStore.aiMessages = [];
         if (!this.memoryStore.aiKnowledgeDocs) this.memoryStore.aiKnowledgeDocs = [];
+        if (!this.memoryStore.tradingChallenges) this.memoryStore.tradingChallenges = [];
+        if (!this.memoryStore.tradingCheckIns) this.memoryStore.tradingCheckIns = [];
         this.ensureInitialUsers();
         this.ensureInitialAccounts();
       } else {

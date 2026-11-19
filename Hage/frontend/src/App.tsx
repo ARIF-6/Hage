@@ -21,6 +21,7 @@ import Support from './pages/dashboard/Support';
 import Settings from './pages/dashboard/Settings';
 import Payouts from './pages/dashboard/Payouts';
 import Community from './pages/dashboard/Community';
+import TradingChallenge from './pages/dashboard/TradingChallenge';
 
 import { DashboardRoute } from './components/auth/DashboardRoute';
 import { DashboardLayout } from './components/layout/DashboardLayout';
@@ -66,6 +67,7 @@ function App() {
           }>
             <Route index element={<Dashboard />} />
             <Route path="campaigns" element={<Campaigns />} />
+            <Route path="challenge" element={<TradingChallenge />} />
             <Route path="journal" element={<Journal />} />
             <Route path="trades" element={<Trades />} />
             <Route path="analytics" element={<Analytics />} />
