@@ -555,7 +555,7 @@ export default function TradingChallenge() {
                     Daily Check-In Station
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Log your daily performance, upload proof of execution (screenshot or $\le 60$s video), and keep your streak alive.
+                    Log your daily performance, upload proof of execution (screenshot), and keep your streak alive.
                   </p>
                 </div>
 
@@ -596,86 +596,42 @@ export default function TradingChallenge() {
                   />
                 </div>
 
-                {/* Media Uploads Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Screenshot Upload */}
-                  <div className="p-4 rounded-xl border border-dashed border-gray-300 dark:border-[#1E293B] bg-gray-50/50 dark:bg-[#182030]/30 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <Image className="w-4 h-4 text-blue-500" /> Chart Screenshot
-                      </span>
-                      {screenshotData && (
-                        <button
-                          type="button"
-                          onClick={() => setScreenshotData(null)}
-                          className="text-[11px] text-rose-500 hover:underline"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-
-                    {screenshotData ? (
-                      <div className="relative rounded-lg overflow-hidden border border-gray-200 dark:border-[#1E293B]">
-                        <img src={screenshotData.url} alt="Uploaded chart" className="w-full h-32 object-cover" />
-                        <div className="p-1 text-[10px] text-slate-400 truncate">{screenshotData.name}</div>
-                      </div>
-                    ) : (
-                      <label className="block cursor-pointer text-center py-6">
-                        <Upload className="w-6 h-6 mx-auto text-slate-400 mb-1" />
-                        <span className="text-xs font-semibold text-[#6355F6]">Upload Screenshot</span>
-                        <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG up to 5MB</p>
-                        <input
-                          ref={imageInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleScreenshotSelect}
-                          className="hidden"
-                        />
-                      </label>
+                {/* Media Upload (Screenshot) */}
+                <div className="p-4 rounded-xl border border-dashed border-gray-300 dark:border-[#1E293B] bg-gray-50/50 dark:bg-[#182030]/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Image className="w-4 h-4 text-blue-500" /> Chart Screenshot (Optional)
+                    </span>
+                    {screenshotData && (
+                      <button
+                        type="button"
+                        onClick={() => setScreenshotData(null)}
+                        className="text-[11px] text-rose-500 hover:underline cursor-pointer"
+                      >
+                        Remove
+                      </button>
                     )}
                   </div>
 
-                  {/* Video Upload (Validated <= 60s) */}
-                  <div className="p-4 rounded-xl border border-dashed border-gray-300 dark:border-[#1E293B] bg-gray-50/50 dark:bg-[#182030]/30 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <Video className="w-4 h-4 text-purple-500" /> Video Log (Max 60s)
-                      </span>
-                      {videoData && (
-                        <button
-                          type="button"
-                          onClick={() => setVideoData(null)}
-                          className="text-[11px] text-rose-500 hover:underline"
-                        >
-                          Remove
-                        </button>
-                      )}
+                  {screenshotData ? (
+                    <div className="relative rounded-lg overflow-hidden border border-gray-200 dark:border-[#1E293B]">
+                      <img src={screenshotData.url} alt="Uploaded chart" className="w-full h-40 object-cover" />
+                      <div className="p-1 text-[10px] text-slate-400 truncate">{screenshotData.name}</div>
                     </div>
-
-                    {videoData ? (
-                      <div className="space-y-1">
-                        <video controls src={videoData.url} className="w-full h-32 rounded-lg bg-black object-contain" />
-                        <div className="flex items-center justify-between text-[10px] text-slate-400">
-                          <span className="truncate">{videoData.name}</span>
-                          <span className="font-semibold text-emerald-500">{videoData.duration}s / 60s</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <label className="block cursor-pointer text-center py-6">
-                        <Video className="w-6 h-6 mx-auto text-slate-400 mb-1" />
-                        <span className="text-xs font-semibold text-[#6355F6]">Upload Video Note</span>
-                        <p className="text-[10px] text-slate-400 mt-0.5">MP4, WebM (Max 60 sec & 15MB)</p>
-                        <input
-                          ref={videoInputRef}
-                          type="file"
-                          accept="video/mp4,video/webm"
-                          onChange={handleVideoSelect}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
+                  ) : (
+                    <label className="block cursor-pointer text-center py-6">
+                      <Upload className="w-6 h-6 mx-auto text-slate-400 mb-1" />
+                      <span className="text-xs font-semibold text-[#6355F6]">Upload Screenshot</span>
+                      <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG up to 5MB</p>
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleScreenshotSelect}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
                 </div>
 
                 <Button
