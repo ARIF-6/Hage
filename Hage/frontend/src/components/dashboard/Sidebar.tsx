@@ -5,7 +5,7 @@ import {
   Settings, LogOut, ChevronLeft, ChevronRight, Plus,
   TrendingUp, DollarSign, Bell, Sun, Moon, Laptop, Check,
   Sparkles, Crown, Activity, MessageSquare, Lock, Headphones,
-  X, Menu
+  X, Menu, Trophy
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -116,6 +116,7 @@ export function Sidebar() {
   const mainLinks = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Target, label: 'Campaigns', path: '/dashboard/campaigns' },
+    { icon: Trophy, label: 'Challenge', path: '/dashboard/challenge' },
     { icon: BookOpen, label: 'Journal', path: '/dashboard/journal' },
     { icon: BarChart2, label: 'Trades', path: '/dashboard/trades' },
     { icon: TrendingUp, label: 'Analytics', path: '/dashboard/analytics' },
