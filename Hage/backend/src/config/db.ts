@@ -34,7 +34,7 @@ const connectDB = async () => {
  */
 const seedAdmin = async () => {
   try {
-    const adminEmail = (process.env.ADMIN_EMAIL || 'omar@gmail.com').toLowerCase().trim();
+    const adminEmail = (process.env.ADMIN_EMAIL || 'omardahir379@gmail.com').toLowerCase().trim();
     const adminPassword = process.env.ADMIN_PASSWORD || 'omar123';
     const adminName = process.env.ADMIN_NAME || 'Omar Dahir';
 

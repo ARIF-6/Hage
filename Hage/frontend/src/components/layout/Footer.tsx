@@ -61,6 +61,16 @@ export function Footer() {
             <ul className="space-y-3">
               <li><Link to="/#faq" className="text-sm text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400">FAQ</Link></li>
               <li><Link to="/contact" className="text-sm text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400">Help Center</Link></li>
+              <li>
+                <a href="mailto:hagetradingjournal@gmail.com" className="text-sm text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400">
+                  hagetradingjournal@gmail.com
+                </a>
+              </li>
+              <li>
+                <a href="https://wa.me/252613904392" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400">
+                  WhatsApp: +252 613 904 392
+                </a>
+              </li>
             </ul>
           </div>
 

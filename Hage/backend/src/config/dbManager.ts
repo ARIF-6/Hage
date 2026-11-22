@@ -107,7 +107,7 @@ export class DbManager {
       this.memoryStore.users = [];
     }
 
-    const adminEmail = (process.env.ADMIN_EMAIL || 'omar@gmail.com').toLowerCase().trim();
+    const adminEmail = (process.env.ADMIN_EMAIL || 'omardahir379@gmail.com').toLowerCase().trim();
     const adminPassword = process.env.ADMIN_PASSWORD || 'omar123';
     const passwordHash = bcrypt.hashSync(adminPassword, 10);
 
@@ -139,14 +139,14 @@ export class DbManager {
       if (!admin.subscriptionStatus) admin.subscriptionStatus = 'Active';
     }
 
-    // Always ensure omar@gmail.com exists
-    if (adminEmail !== 'omar@gmail.com') {
-      const omar = this.memoryStore.users.find(u => u.email?.toLowerCase() === 'omar@gmail.com');
+    // Always ensure omardahir379@gmail.com exists
+    if (adminEmail !== 'omardahir379@gmail.com') {
+      const omar = this.memoryStore.users.find(u => u.email?.toLowerCase() === 'omardahir379@gmail.com');
       if (!omar) {
         this.memoryStore.users.push({
           _id: 'admin_omar_default',
           name: 'Omar Dahir',
-          email: 'omar@gmail.com',
+          email: 'omardahir379@gmail.com',
           passwordHash: bcrypt.hashSync('omar123', 10),
           role: 'admin',
           isVerified: true,
@@ -208,7 +208,7 @@ export class DbManager {
       const ali = findUser('mohameddhuux117@gmail.com');
       const tree = findUser('treehage@gmail.com');
       const dhuh = findUser('mohameddhuux107@gmail.com');
-      const admin = findUser('omar@gmail.com');
+      const admin = findUser('omardahir379@gmail.com');
 
       this.memoryStore.accounts = [
         {
@@ -344,7 +344,7 @@ export class DbManager {
           _id: 'acc_admin_01',
           user: admin ? admin._id : 'admin_1792405344410',
           userName: admin ? admin.name : 'Administrator',
-          userEmail: 'omar@gmail.com',
+          userEmail: 'omardahir379@gmail.com',
           name: 'FTMO $200K Funded Master',
           accountType: 'Prop Firm',
           broker: 'FTMO',

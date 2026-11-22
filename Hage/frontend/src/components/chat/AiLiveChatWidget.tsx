@@ -378,7 +378,7 @@ export function AiLiveChatWidget({
       };
       setMessages(prev => [...prev, confirmMsg]);
     } catch (err) {
-      setTicketStatus('Could not submit ticket. Please email support@hagetrading.com directly.');
+      setTicketStatus('Could not submit ticket. Please email hagetradingjournal@gmail.com directly.');
       setTimeout(() => setTicketStatus(null), 4000);
     }
   };
