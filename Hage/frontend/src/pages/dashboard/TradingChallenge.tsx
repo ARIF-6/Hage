@@ -20,6 +20,34 @@ export default function TradingChallenge() {
   const [activeTab, setActiveTab] = useState<'overview' | 'checkin' | 'calendar' | 'history'>('overview');
   const [isLoading, setIsLoading] = useState(true);
 
+  // Global rules library (persisted to localStorage)
+  const [globalRules, setGlobalRules] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('hage_challenge_rules') || '[]'); } catch { return []; }
+  });
+  const [isAddRuleModalOpen, setIsAddRuleModalOpen] = useState(false);
+  const [addRuleInput, setAddRuleInput] = useState('');
+  const [addRuleError, setAddRuleError] = useState('');
+
+  const handleSaveGlobalRule = () => {
+    const trimmed = addRuleInput.trim();
+    if (!trimmed) { setAddRuleError('Please enter a rule.'); return; }
+    if (globalRules.includes(trimmed)) { setAddRuleError('This rule already exists.'); return; }
+    const updated = [...globalRules, trimmed];
+    setGlobalRules(updated);
+    localStorage.setItem('hage_challenge_rules', JSON.stringify(updated));
+    setAddRuleInput('');
+    setAddRuleError('');
+    setIsAddRuleModalOpen(false);
+  };
+
+  const handleDeleteGlobalRule = (rule: string) => {
+    const updated = globalRules.filter(r => r !== rule);
+    setGlobalRules(updated);
+    localStorage.setItem('hage_challenge_rules', JSON.stringify(updated));
+    // Also uncheck from new challenge form if it was selected
+    setNewRules(prev => prev.filter(r => r !== rule));
+  };
+
   // Creation modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -27,7 +55,6 @@ export default function TradingChallenge() {
   const [newDuration, setNewDuration] = useState<number>(30);
   const [customDays, setCustomDays] = useState('');
   const [newCommitment, setNewCommitment] = useState('');
-  const [newRuleInput, setNewRuleInput] = useState('');
   const [newRules, setNewRules] = useState<string[]>([]);
   const [newCoverImage, setNewCoverImage] = useState<string>('');
   const [createError, setCreateError] = useState('');
@@ -106,15 +133,10 @@ export default function TradingChallenge() {
     }
   };
 
-  const handleAddRule = () => {
-    if (newRuleInput.trim() && !newRules.includes(newRuleInput.trim())) {
-      setNewRules([...newRules, newRuleInput.trim()]);
-      setNewRuleInput('');
-    }
-  };
-
-  const handleRemoveRule = (index: number) => {
-    setNewRules(newRules.filter((_, i) => i !== index));
+  const handleToggleRule = (rule: string) => {
+    setNewRules(prev =>
+      prev.includes(rule) ? prev.filter(r => r !== rule) : [...prev, rule]
+    );
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -315,17 +337,9 @@ export default function TradingChallenge() {
 
         <div className="flex items-center gap-3">
           <Button
+            onClick={() => setIsAddRuleModalOpen(true)}
             variant="outline"
-            onClick={() => {
-              if (triggerReadOnlyAlert('add a rule')) return;
-              setIsCreateModalOpen(true);
-              // small delay so modal is mounted, then scroll to rules section
-              setTimeout(() => {
-                const el = document.getElementById('challenge-rules-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }, 150);
-            }}
-            className="flex items-center gap-2 font-semibold text-xs sm:text-sm"
+            className="flex items-center gap-2 font-semibold text-xs sm:text-sm border-[#6355F6] text-[#6355F6] hover:bg-[#6355F6]/10"
           >
             <Plus className="w-4 h-4" />
             Add Rule
@@ -894,6 +908,87 @@ export default function TradingChallenge() {
         </div>
       )}
 
+      {/* ── ADD RULE MODAL ── */}
+      {isAddRuleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#111722] border border-gray-200 dark:border-[#1E293B] rounded-2xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Target className="w-4 h-4 text-[#6355F6]" />
+                Add Rule
+              </h3>
+              <button
+                onClick={() => { setIsAddRuleModalOpen(false); setAddRuleInput(''); setAddRuleError(''); }}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {addRuleError && (
+              <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs">
+                {addRuleError}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1.5">
+                Rule
+              </label>
+              <input
+                type="text"
+                autoFocus
+                value={addRuleInput}
+                onChange={(e) => { setAddRuleInput(e.target.value); setAddRuleError(''); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSaveGlobalRule(); } }}
+                placeholder="e.g. No trading during major red-folder news"
+                className="w-full px-3 py-2.5 text-xs rounded-xl border border-gray-200 dark:border-[#1E293B] bg-white dark:bg-[#182030] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#6355F6]/30 focus:border-[#6355F6] outline-none"
+              />
+            </div>
+
+            {/* Existing rules list */}
+            {globalRules.length > 0 && (
+              <div>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  Your Rules ({globalRules.length})
+                </p>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {globalRules.map((rule, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gray-50 dark:bg-[#182030] border border-gray-100 dark:border-[#1E293B]">
+                      <span className="text-xs text-gray-700 dark:text-slate-300 flex-1 leading-relaxed">{rule}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteGlobalRule(rule)}
+                        className="text-slate-400 hover:text-rose-500 transition-colors shrink-0"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setIsAddRuleModalOpen(false); setAddRuleInput(''); setAddRuleError(''); }}
+              >
+                Close
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSaveGlobalRule}
+                className="bg-[#6355F6] hover:bg-[#5244E3] text-white"
+              >
+                Save Rule
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── CREATE CHALLENGE MODAL ── */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
@@ -981,56 +1076,35 @@ export default function TradingChallenge() {
                 />
               </div>
 
-              <div id="challenge-rules-section">
-                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1">
-                  Personal Rules
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-2">
+                  Your Rules
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newRuleInput}
-                    onChange={(e) => setNewRuleInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddRule(); } }}
-                    placeholder="e.g. No trading during major red-folder news"
-                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-gray-200 dark:border-[#1E293B] bg-white dark:bg-[#182030] text-gray-900 dark:text-white"
-                  />
-                  <Button type="button" onClick={handleAddRule} variant="outline" className="text-xs">
-                    Add
-                  </Button>
-                </div>
-
-                {newRules.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                      Your Rules — check each one you commit to follow:
-                    </p>
-                    {newRules.map((rule, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 dark:border-[#1E293B] bg-gray-50/60 dark:bg-[#182030]/60 group"
-                      >
+                {globalRules.length === 0 ? (
+                  <div className="p-3 rounded-xl border border-dashed border-gray-200 dark:border-[#1E293B] text-center text-xs text-slate-400 dark:text-slate-500">
+                    No rules yet. Click <span className="font-semibold text-[#6355F6]">"Add Rule"</span> next to "Create Challenge" to create reusable rules.
+                  </div>
+                ) : (
+                  <div className="space-y-2 p-3 rounded-xl border border-gray-200 dark:border-[#1E293B] bg-gray-50/50 dark:bg-[#182030]/40 max-h-44 overflow-y-auto">
+                    {globalRules.map((rule, idx) => (
+                      <label key={idx} className="flex items-start gap-2.5 cursor-pointer group">
                         <input
-                          id={`rule-check-${idx}`}
                           type="checkbox"
-                          defaultChecked
-                          className="w-4 h-4 rounded border-gray-300 dark:border-slate-600 accent-[#6355F6] cursor-pointer shrink-0"
+                          checked={newRules.includes(rule)}
+                          onChange={() => handleToggleRule(rule)}
+                          className="mt-0.5 w-3.5 h-3.5 rounded accent-[#6355F6] cursor-pointer shrink-0"
                         />
-                        <label
-                          htmlFor={`rule-check-${idx}`}
-                          className="flex-1 text-xs text-gray-800 dark:text-slate-200 font-medium cursor-pointer select-none"
-                        >
+                        <span className={`text-xs leading-relaxed transition-colors ${newRules.includes(rule) ? 'text-[#6355F6] font-semibold' : 'text-gray-700 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white'}`}>
                           {rule}
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveRule(idx)}
-                          className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-opacity p-0.5 rounded"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                        </span>
+                      </label>
                     ))}
                   </div>
+                )}
+                {newRules.length > 0 && (
+                  <p className="text-[11px] text-[#6355F6] mt-1.5 font-medium">
+                    {newRules.length} rule{newRules.length > 1 ? 's' : ''} selected
+                  </p>
                 )}
               </div>
 
