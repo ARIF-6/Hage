@@ -315,6 +315,22 @@ export default function TradingChallenge() {
 
         <div className="flex items-center gap-3">
           <Button
+            variant="outline"
+            onClick={() => {
+              if (triggerReadOnlyAlert('add a rule')) return;
+              setIsCreateModalOpen(true);
+              // small delay so modal is mounted, then scroll to rules section
+              setTimeout(() => {
+                const el = document.getElementById('challenge-rules-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 150);
+            }}
+            className="flex items-center gap-2 font-semibold text-xs sm:text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Rule
+          </Button>
+          <Button
             onClick={() => {
               if (triggerReadOnlyAlert('create a challenge')) return;
               setIsCreateModalOpen(true);
@@ -965,7 +981,7 @@ export default function TradingChallenge() {
                 />
               </div>
 
-              <div>
+              <div id="challenge-rules-section">
                 <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 mb-1">
                   Personal Rules
                 </label>
@@ -974,6 +990,7 @@ export default function TradingChallenge() {
                     type="text"
                     value={newRuleInput}
                     onChange={(e) => setNewRuleInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddRule(); } }}
                     placeholder="e.g. No trading during major red-folder news"
                     className="flex-1 px-3 py-2 text-xs rounded-xl border border-gray-200 dark:border-[#1E293B] bg-white dark:bg-[#182030] text-gray-900 dark:text-white"
                   />
@@ -983,17 +1000,35 @@ export default function TradingChallenge() {
                 </div>
 
                 {newRules.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
+                  <div className="mt-3 space-y-2">
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                      Your Rules — check each one you commit to follow:
+                    </p>
                     {newRules.map((rule, idx) => (
-                      <span
+                      <div
                         key={idx}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#6355F6]/10 text-[#6355F6] text-xs font-medium"
+                        className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 dark:border-[#1E293B] bg-gray-50/60 dark:bg-[#182030]/60 group"
                       >
-                        {rule}
-                        <button type="button" onClick={() => handleRemoveRule(idx)}>
-                          <X className="w-3 h-3 hover:text-rose-500" />
+                        <input
+                          id={`rule-check-${idx}`}
+                          type="checkbox"
+                          defaultChecked
+                          className="w-4 h-4 rounded border-gray-300 dark:border-slate-600 accent-[#6355F6] cursor-pointer shrink-0"
+                        />
+                        <label
+                          htmlFor={`rule-check-${idx}`}
+                          className="flex-1 text-xs text-gray-800 dark:text-slate-200 font-medium cursor-pointer select-none"
+                        >
+                          {rule}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRule(idx)}
+                          className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-opacity p-0.5 rounded"
+                        >
+                          <X className="w-3.5 h-3.5" />
                         </button>
-                      </span>
+                      </div>
                     ))}
                   </div>
                 )}
