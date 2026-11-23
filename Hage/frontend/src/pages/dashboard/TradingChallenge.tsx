@@ -382,7 +382,7 @@ export default function TradingChallenge() {
                   {selectedChallenge?.currentStreak || 0} <span className="text-xs font-semibold text-slate-400">days</span>
                 </p>
                 {/* Restore Streak Button when broken */}
-                {selectedChallenge && (selectedChallenge.currentStreak === 0) && (selectedChallenge.longestStreak > 0 || (selectedChallenge.completedDays || 0) > 0) && (
+                {selectedChallenge && selectedChallenge.status === 'active' && selectedChallenge.currentStreak === 0 && (selectedChallenge.longestStreak > 0 || (selectedChallenge.completedDays || 0) > 0) && (
                   <button
                     type="button"
                     onClick={handleRestoreStreak}
@@ -532,7 +532,7 @@ export default function TradingChallenge() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {selectedChallenge.currentStreak === 0 && (selectedChallenge.longestStreak > 0 || (selectedChallenge.completedDays || 0) > 0) && (
+                  {selectedChallenge.status === 'active' && selectedChallenge.currentStreak === 0 && (selectedChallenge.longestStreak > 0 || (selectedChallenge.completedDays || 0) > 0) && (
                     <Button
                       onClick={handleRestoreStreak}
                       disabled={isRestoringStreak}
