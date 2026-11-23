@@ -70,8 +70,9 @@ const getEmailTransporter = async () => {
     cachedTransporter = nodemailer.createTransport({
       service: 'gmail',
       auth: { user, pass },
-      pool: true,          // reuse connections
-      maxConnections: 3,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
     return cachedTransporter;
   }
@@ -182,7 +183,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
               </div>
             `,
           }),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SendMail timeout')), 3500))
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SendMail timeout')), 12000))
         ]);
         emailSent = true;
       }
@@ -357,7 +358,7 @@ export const resendRegistrationOtp = async (req: Request, res: Response): Promis
             text: `Your new HAGE verification code is: ${otp}. It will expire in 15 minutes.`,
             html: `<b>Your new verification code is: ${otp}</b><br/>It will expire in 15 minutes.`,
           }),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SendMail timeout')), 3500))
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SendMail timeout')), 12000))
         ]);
         emailSent = true;
       }
